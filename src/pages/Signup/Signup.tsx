@@ -14,6 +14,7 @@ import {
   Input,
   InputGroup,
   InputRightElement,
+  SimpleGrid,
   Text,
 } from "@chakra-ui/react";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -28,11 +29,15 @@ import * as yup from "yup";
 type SignupInputs = {
   email: string;
   password: string;
+  firstName: string;
+  lastName: string;
 };
 
 const loginSchema = yup.object().shape({
   email: yup.string().required().email(),
   password: yup.string().required(),
+  firstName: yup.string().required(),
+  lastName: yup.string().required(),
 });
 
 export default function Signup() {
@@ -44,7 +49,12 @@ export default function Signup() {
     resolver: yupResolver(loginSchema),
   });
 
-  const onSubmit = async ({ email, password }: SignupInputs) => {
+  const onSubmit = async ({
+    email,
+    password,
+    firstName,
+    lastName,
+  }: SignupInputs) => {
     setIsLoading(true);
     try {
       await fetchData(`${process.env.REACT_APP_API_URL}/auth/signup`, {
@@ -52,7 +62,7 @@ export default function Signup() {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams({ email, password }),
+        body: new URLSearchParams({ email, password, firstName, lastName }),
       });
       setIsLoading(false);
       setShowPassword(false);
@@ -80,7 +90,31 @@ export default function Signup() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <FormControl isInvalid={Boolean(errors.email)}>
+            <SimpleGrid columns={2} spacing={2}>
+              <FormControl isInvalid={Boolean(errors.firstName)}>
+                <FormLabel htmlFor="firstName">First name</FormLabel>
+                <Input
+                  autoFocus
+                  type="text"
+                  name="firstName"
+                  ref={register}
+                  size="lg"
+                />
+                <FormErrorMessage>{errors.firstName?.message}</FormErrorMessage>
+              </FormControl>
+              <FormControl isInvalid={Boolean(errors.lastName)}>
+                <FormLabel htmlFor="lastName">Last name</FormLabel>
+                <Input
+                  autoFocus
+                  type="text"
+                  name="lastName"
+                  ref={register}
+                  size="lg"
+                />
+                <FormErrorMessage>{errors.lastName?.message}</FormErrorMessage>
+              </FormControl>
+            </SimpleGrid>
+            <FormControl isInvalid={Boolean(errors.email)} mt={4}>
               <FormLabel htmlFor="email">Email</FormLabel>
               <Input
                 autoFocus
@@ -91,7 +125,7 @@ export default function Signup() {
               />
               <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
             </FormControl>
-            <FormControl isInvalid={Boolean(errors.password)} mt={6}>
+            <FormControl isInvalid={Boolean(errors.password)} mt={4}>
               <FormLabel htmlFor="password">Password</FormLabel>
               <InputGroup size="lg">
                 <Input

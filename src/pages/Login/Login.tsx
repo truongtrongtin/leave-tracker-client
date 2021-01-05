@@ -130,7 +130,7 @@ export default function Login() {
               mt={8}
             >
               {isLoading ? (
-                <CircularProgress isIndeterminate size="24px" color="teal" />
+                <CircularProgress isIndeterminate size="24px" />
               ) : (
                 "Sign in"
               )}
