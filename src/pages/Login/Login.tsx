@@ -18,7 +18,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { fetchData } from "utils/fetchData";
+import { fetchData } from "services/fetchData";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -49,16 +49,13 @@ export default function Login() {
   const onSubmit = async ({ email, password }: LoginInputs) => {
     setIsLoading(true);
     try {
-      const user = await fetchData(
-        `${process.env.REACT_APP_API_URL}/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({ email, password }),
-        }
-      );
+      const user = await fetchData("/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ email, password }),
+      });
       setCurrentUser(user);
       setIsLoading(false);
       setShowPassword(false);
@@ -87,7 +84,7 @@ export default function Login() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <FormControl isInvalid={Boolean(errors.email)}>
+            <FormControl isRequired isInvalid={Boolean(errors.email)}>
               <FormLabel htmlFor="email">Email</FormLabel>
               <Input
                 autoFocus
@@ -98,7 +95,7 @@ export default function Login() {
               />
               <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
             </FormControl>
-            <FormControl isInvalid={Boolean(errors.password)} mt={6}>
+            <FormControl isRequired isInvalid={Boolean(errors.password)} mt={6}>
               <FormLabel htmlFor="password">Password</FormLabel>
               <InputGroup size="lg">
                 <Input

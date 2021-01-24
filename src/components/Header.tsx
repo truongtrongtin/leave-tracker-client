@@ -16,7 +16,7 @@ import logo from "assets/icons/react.svg";
 import React, { useContext } from "react";
 import { AiOutlineMenu, AiOutlineSearch } from "react-icons/ai";
 import { BsBell, BsChat } from "react-icons/bs";
-import { fetchData } from "utils/fetchData";
+import { fetchData } from "services/fetchData";
 import { Link as RouteLink, useLocation } from "wouter";
 
 export default function Header() {
@@ -24,7 +24,7 @@ export default function Header() {
   const { setCurrentUser } = useContext(AppContext);
 
   const logout = async () => {
-    await fetchData(`${process.env.REACT_APP_API_URL}/auth/logout`, {
+    await fetchData("/auth/logout", {
       method: "POST",
     });
     setCurrentUser(null);

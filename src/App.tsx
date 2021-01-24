@@ -6,7 +6,7 @@ import Leaves from "pages/Leaves";
 import Login from "pages/Login";
 import Signup from "pages/Signup";
 import React, { useEffect, useState } from "react";
-import { fetchData } from "utils/fetchData";
+import { fetchData } from "services/fetchData";
 import { Redirect, Route, Switch, useLocation } from "wouter";
 
 function App() {
@@ -17,17 +17,13 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const user = await fetchData(
-          `${process.env.REACT_APP_API_URL}/auth/me`
-        );
+        const user = await fetchData("/auth/me");
         setCurrentUser(user);
         setIsLoading(false);
       } catch (error) {
         try {
-          await fetchData(`${process.env.REACT_APP_API_URL}/auth/refresh`);
-          const user = await fetchData(
-            `${process.env.REACT_APP_API_URL}/auth/me`
-          );
+          await fetchData("/auth/refresh");
+          const user = await fetchData("/auth/me");
           setCurrentUser(user);
           setIsLoading(false);
         } catch (error) {

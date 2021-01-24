@@ -22,7 +22,7 @@ import AppLink from "components/AppLink";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { fetchData } from "utils/fetchData";
+import { fetchData } from "services/fetchData";
 import { useLocation } from "wouter";
 import * as yup from "yup";
 
@@ -57,7 +57,7 @@ export default function Signup() {
   }: SignupInputs) => {
     setIsLoading(true);
     try {
-      await fetchData(`${process.env.REACT_APP_API_URL}/auth/signup`, {
+      await fetchData("/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -91,7 +91,7 @@ export default function Signup() {
               </Alert>
             )}
             <SimpleGrid columns={2} spacing={2}>
-              <FormControl isInvalid={Boolean(errors.firstName)}>
+              <FormControl isRequired isInvalid={Boolean(errors.firstName)}>
                 <FormLabel htmlFor="firstName">First name</FormLabel>
                 <Input
                   autoFocus
@@ -102,7 +102,7 @@ export default function Signup() {
                 />
                 <FormErrorMessage>{errors.firstName?.message}</FormErrorMessage>
               </FormControl>
-              <FormControl isInvalid={Boolean(errors.lastName)}>
+              <FormControl isRequired isInvalid={Boolean(errors.lastName)}>
                 <FormLabel htmlFor="lastName">Last name</FormLabel>
                 <Input
                   autoFocus
@@ -114,7 +114,7 @@ export default function Signup() {
                 <FormErrorMessage>{errors.lastName?.message}</FormErrorMessage>
               </FormControl>
             </SimpleGrid>
-            <FormControl isInvalid={Boolean(errors.email)} mt={4}>
+            <FormControl isRequired isInvalid={Boolean(errors.email)} mt={4}>
               <FormLabel htmlFor="email">Email</FormLabel>
               <Input
                 autoFocus
@@ -125,7 +125,7 @@ export default function Signup() {
               />
               <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
             </FormControl>
-            <FormControl isInvalid={Boolean(errors.password)} mt={4}>
+            <FormControl isRequired isInvalid={Boolean(errors.password)} mt={4}>
               <FormLabel htmlFor="password">Password</FormLabel>
               <InputGroup size="lg">
                 <Input
