@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   Button,
@@ -7,24 +6,25 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
+  Select,
+  Text,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
+import { Can } from "components/Can";
 import LDTable from "components/LDTable/LDTable";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { BiChevronDown, BiDotsVerticalRounded } from "react-icons/bi";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { BiDotsVerticalRounded } from "react-icons/bi";
 import { fetchData } from "services/fetchData";
-import CreateLeaveModal from "./CreateLeaveModal";
-import EditLeaveModal from "./EditLeaveModal";
-
-export type User = {
-  firstName: string;
-  lastName: string;
-};
+import { User } from "../Employee/Employee";
+import DeleteLeaveModal from "./DeleteLeaveModal";
+import NewLeaveModal, { NewLeaveInputs } from "./NewLeaveModal";
 
 export type Leave = {
   id: number;
-  from: string;
-  to: string;
+  startAt: Date;
+  endAt: Date;
+  noOfDays: any;
   reason: string;
   status: string;
   user: User;
@@ -36,28 +36,57 @@ enum LeaveStatus {
   DECLINED = "DECLINED",
 }
 
+function calculateLeaveDays(startDate: Date, endDate: Date) {
+  const totalHours = (endDate.getTime() - startDate.getTime()) / 1000 / 3600;
+  const remainder = totalHours % 24;
+  let remainWorkDay;
+  if (remainder === 0) {
+    remainWorkDay = 0;
+  } else if (remainder >= 9) {
+    remainWorkDay = 1;
+  } else {
+    remainWorkDay = 0.5;
+  }
+  let numWorkDays = 0;
+  while (startDate <= endDate) {
+    if (startDate.getDay() !== 0 && startDate.getDay() !== 6) {
+      numWorkDays++;
+    }
+    startDate.setDate(startDate.getDate() + 1);
+  }
+  return numWorkDays - 1 + remainWorkDay;
+}
+
 function Leaves() {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
-  const [, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
 
   const {
     isOpen: isOpenCreate,
     onOpen: onOpenCreate,
     onClose: onCloseCreate,
-  } = useDisclosure({ id: "123" });
+  } = useDisclosure();
+
   const {
     isOpen: isOpenEdit,
     onOpen: onOpenEdit,
     onClose: onCloseEdit,
-  } = useDisclosure({ id: "asdas" });
+  } = useDisclosure();
+
+  const {
+    isOpen: isOpenDelete,
+    onOpen: onOpenDelete,
+    onClose: onCloseDelete,
+  } = useDisclosure();
 
   useEffect(() => {
     const getAllLeaves = async () => {
       try {
         setIsLoading(true);
         const leaves = await fetchData("/leaves");
-        setLeaves(leaves);
+        setLeaves(leaves.items);
         setIsLoading(false);
       } catch (error) {
         setIsLoading(false);
@@ -66,114 +95,161 @@ function Leaves() {
     getAllLeaves();
   }, []);
 
-  const updateLeave = (newLeave: Leave) => {
-    const newLeaves = leaves.map((leave) => {
-      if (leave.id === newLeave.id) return newLeave;
-      return leave;
-    });
-    setLeaves(newLeaves);
+  const createLeave = async ({ startAt, endAt, reason }: NewLeaveInputs) => {
+    setIsLoading(true);
+    try {
+      const newLeave = await fetchData(`/leaves/add`, {
+        method: "POST",
+        body: new URLSearchParams({
+          startAt: startAt.toISOString(),
+          endAt: endAt.toISOString(),
+          reason,
+        }),
+      });
+      setIsLoading(false);
+      setLeaves([newLeave, ...leaves]);
+      onCloseCreate();
+    } catch (error) {
+      setIsLoading(false);
+      onCloseCreate();
+    }
+  };
+
+  const updateLeave = async ({ startAt, endAt, reason }: NewLeaveInputs) => {
+    if (!selectedLeave) return;
+    try {
+      setIsLoading(true);
+      const newLeave = await fetchData(`/leaves/${selectedLeave.id}/edit`, {
+        method: "POST",
+        body: new URLSearchParams({
+          startAt: startAt.toISOString(),
+          endAt: endAt.toISOString(),
+          reason,
+        }),
+      });
+      const newLeaves = leaves.map((leave) => {
+        if (leave.id === newLeave.id) return newLeave;
+        return leave;
+      });
+      setLeaves(newLeaves);
+      setIsLoading(false);
+      onCloseEdit();
+    } catch (error) {
+      toast({ description: error.message, status: "error" });
+      setIsLoading(false);
+      onCloseEdit();
+    }
   };
 
   const changeLeaveStatus = useCallback(
-    async (leave: Leave, status: LeaveStatus) => {
+    async (leave: Leave, status: string) => {
       if (leave.status === status) return;
       try {
         setIsLoading(true);
-        const newLeave = await fetchData(`/leaves/${leave.id}/status`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
+        const newLeave = await fetchData(`/leaves/${leave.id}/edit`, {
+          method: "POST",
           body: new URLSearchParams({ status }),
         });
         const newLeaves = leaves.map((leave) => {
-          if (leave.id === newLeave.id) return { ...leave, status };
+          if (leave.id === newLeave.id) return newLeave;
           return leave;
         });
-        setIsLoading(false);
         setLeaves(newLeaves);
+        setIsLoading(false);
       } catch (error) {
+        toast({ description: error.message, status: "error" });
         setIsLoading(false);
       }
     },
-    [leaves]
+    [leaves, toast]
   );
 
-  const deleteLeave = useCallback(
-    async (leave: Leave) => {
-      try {
-        setIsLoading(true);
-        await fetchData(`/leaves/${leave.id}`, {
-          method: "DELETE",
-        });
-        const newLeaves = leaves.filter((l) => l.id !== leave.id);
-        setIsLoading(false);
-        setLeaves(newLeaves);
-      } catch (error) {
-        setIsLoading(false);
-      }
-    },
-    [leaves]
-  );
-
-  const openEdit = useCallback(
-    (leave) => {
-      setSelectedLeave(leave);
-      onOpenEdit();
-    },
-    [onOpenEdit]
-  );
+  const deleteLeave = useCallback(async () => {
+    if (!selectedLeave) return;
+    try {
+      setIsLoading(true);
+      await fetchData(`/leaves/${selectedLeave.id}/delete`, {
+        method: "POST",
+      });
+      const newLeaves = leaves.filter((l) => l.id !== selectedLeave.id);
+      setIsLoading(false);
+      onCloseDelete();
+      setLeaves(newLeaves);
+    } catch (error) {
+      toast({ description: error.message, status: "error" });
+      setIsLoading(false);
+    }
+  }, [leaves, selectedLeave, onCloseDelete, toast]);
 
   const data = useMemo(
     () =>
       leaves.map((leave) => {
         return {
           employee: leave.user.firstName + " " + leave.user.lastName,
-          from: new Date(leave.from).toLocaleString(undefined, {
+          startAt: new Date(leave.startAt).toLocaleString(undefined, {
             weekday: "short",
             month: "short",
             day: "numeric",
             hour: "numeric",
             minute: "numeric",
           }),
-          to: new Date(leave.to).toLocaleString(undefined, {
+          endAt: new Date(leave.endAt).toLocaleString(undefined, {
             weekday: "short",
             month: "short",
             day: "numeric",
             hour: "numeric",
             minute: "numeric",
           }),
-          noOfDays: "noOfDays",
+          noOfDays: calculateLeaveDays(
+            new Date(leave.startAt),
+            new Date(leave.endAt)
+          ),
           reason: leave.reason,
           status: (
-            <Menu>
-              <MenuButton as={Button} rightIcon={<BiChevronDown />}>
-                {leave.status}
-              </MenuButton>
-              <MenuList>
-                {Object.values(LeaveStatus).map((status) => (
-                  <MenuItem
-                    key={status}
-                    onClick={() => changeLeaveStatus(leave, status)}
-                  >
-                    {status}
-                  </MenuItem>
-                ))}
-              </MenuList>
-            </Menu>
+            <>
+              <Can I="update" a="Leave">
+                <Select
+                  value={leave.status}
+                  onChange={(e) => changeLeaveStatus(leave, e.target.value)}
+                >
+                  {Object.values(LeaveStatus).map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </Select>
+              </Can>
+              <Can I="read" a="Leave">
+                <Text>{leave.status}</Text>
+              </Can>
+            </>
           ),
           action: (
             <Menu>
               <MenuButton as={IconButton} icon={<BiDotsVerticalRounded />} />
               <MenuList>
-                <MenuItem onClick={() => openEdit(leave)}>Edit</MenuItem>
-                <MenuItem onClick={() => deleteLeave(leave)}>Delete</MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setSelectedLeave(leave);
+                    onOpenEdit();
+                  }}
+                >
+                  Edit
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setSelectedLeave(leave);
+                    onOpenDelete();
+                  }}
+                >
+                  Delete
+                </MenuItem>
               </MenuList>
             </Menu>
           ),
         };
       }),
-    [leaves, changeLeaveStatus, openEdit, deleteLeave]
+    [leaves, changeLeaveStatus, onOpenDelete, onOpenEdit]
   );
 
   const columns = useMemo(
@@ -183,12 +259,12 @@ function Leaves() {
         accessor: "employee",
       },
       {
-        Header: "From",
-        accessor: "from",
+        Header: "Start At",
+        accessor: "startAt",
       },
       {
-        Header: "To",
-        accessor: "to",
+        Header: "End At",
+        accessor: "endAt",
       },
       {
         Header: "No Of Days",
@@ -209,23 +285,32 @@ function Leaves() {
     ],
     []
   );
+
   return (
     <Box>
       <Button onClick={onOpenCreate}>Add Leave</Button>
       <LDTable data={data} columns={columns} />
-      <CreateLeaveModal
+      <NewLeaveModal
         isOpen={isOpenCreate}
         onClose={onCloseCreate}
-        onFinishSubmit={(newLeave) => setLeaves([newLeave, ...leaves])}
+        isLoading={isLoading}
+        onSubmit={createLeave}
       />
       {selectedLeave && (
-        <EditLeaveModal
+        <NewLeaveModal
           leave={selectedLeave}
           isOpen={isOpenEdit}
           onClose={onCloseEdit}
-          onFinishSubmit={(newLeave) => updateLeave(newLeave)}
+          isLoading={isLoading}
+          onSubmit={updateLeave}
         />
       )}
+      <DeleteLeaveModal
+        isOpen={isOpenDelete}
+        onClose={onCloseDelete}
+        isLoading={isLoading}
+        onSubmit={deleteLeave}
+      />
     </Box>
   );
 }

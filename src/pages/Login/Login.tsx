@@ -1,30 +1,31 @@
-import React, { useContext, useState } from "react";
 import {
-  Flex,
+  Alert,
+  AlertDescription,
+  AlertIcon,
   Box,
-  Heading,
-  FormControl,
-  FormLabel,
-  Input,
   Button,
   CircularProgress,
+  Flex,
+  FormControl,
+  FormErrorMessage,
+  FormLabel,
+  Heading,
+  IconButton,
+  Input,
   InputGroup,
   InputRightElement,
-  IconButton,
-  Alert,
-  AlertIcon,
-  AlertDescription,
-  FormErrorMessage,
   Text,
 } from "@chakra-ui/react";
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { fetchData } from "services/fetchData";
-import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { Redirect, useLocation } from "wouter";
 import AppContext from "AppContext";
 import AppLink from "components/AppLink";
+import ability, { defineRulesFor } from "config/ability";
+import React, { useContext, useState } from "react";
+import { useForm } from "react-hook-form";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { fetchData } from "services/fetchData";
+import { Redirect, useLocation } from "wouter";
+import * as yup from "yup";
 
 type LoginInputs = {
   email: string;
@@ -49,27 +50,25 @@ export default function Login() {
   const onSubmit = async ({ email, password }: LoginInputs) => {
     setIsLoading(true);
     try {
-      const user = await fetchData("/auth/login", {
+      await fetchData("/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
         body: new URLSearchParams({ email, password }),
       });
+      const user = await fetchData("/auth/me");
       setCurrentUser(user);
+      ability.update(defineRulesFor(user));
       setIsLoading(false);
       setShowPassword(false);
       setError("");
-      setLocation("/leaves");
+      setLocation("/");
     } catch (error) {
-      console.log(error.message);
       setError(error.message);
       setIsLoading(false);
       setShowPassword(false);
     }
   };
 
-  if (currentUser) return <Redirect to="/leaves" />;
+  if (currentUser) return <Redirect to="/" />;
   return (
     <Flex align="center" height="100vh" justifyContent="center">
       <Box width="400px" p={8} borderWidth={1} borderRadius={8} boxShadow="lg">

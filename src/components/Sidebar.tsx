@@ -7,13 +7,23 @@ import AppLink from "./AppLink";
 const sidebarItems = [
   {
     icon: FaRegCalendarTimes,
-    name: "Leaves",
+    name: "Dashboard",
+    href: "/dashboard",
+  },
+  {
+    icon: FaRegCalendarTimes,
+    name: "My Leaves",
     href: "/leaves",
   },
   {
     icon: BiUser,
     name: "Employees",
     href: "/employees",
+  },
+  {
+    icon: BiUser,
+    name: "Holidays",
+    href: "/holidays",
   },
 ];
 

@@ -59,9 +59,6 @@ export default function Signup() {
     try {
       await fetchData("/auth/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
         body: new URLSearchParams({ email, password, firstName, lastName }),
       });
       setIsLoading(false);
@@ -69,7 +66,6 @@ export default function Signup() {
       setError("");
       setLocation("/login");
     } catch (error) {
-      console.log(error.message);
       setError(error.message);
       setIsLoading(false);
       setShowPassword(false);
