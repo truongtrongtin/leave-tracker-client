@@ -10,17 +10,20 @@ import {
   InputRightElement,
   Link,
   Spacer,
+  useColorMode,
 } from "@chakra-ui/react";
 import AppContext from "AppContext";
 import logo from "assets/icons/react.svg";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { AiOutlineMenu, AiOutlineSearch } from "react-icons/ai";
 import { BsBell, BsChat } from "react-icons/bs";
+import { FaRegMoon, FaRegSun } from "react-icons/fa";
 import { Link as RouteLink, useLocation } from "wouter";
 
 export default function Header() {
   const [, setLocation] = useLocation();
   const { setCurrentUser } = useContext(AppContext);
+  const { colorMode, toggleColorMode } = useColorMode();
 
   const logout = async () => {
     await fetch("/auth/logout", {
@@ -34,14 +37,15 @@ export default function Header() {
     <Flex
       position="fixed"
       top={0}
-      left={0}
-      right={0}
+      width="100%"
       as="nav"
       height={14}
       alignItems="center"
       borderBottom="1px"
       borderBottomColor="gray.200"
       boxShadow="base"
+      backgroundColor="white"
+      zIndex={5}
     >
       <Flex justifyContent="center" width={56}>
         <RouteLink href="/leaves">
@@ -57,6 +61,12 @@ export default function Header() {
           icon={<AiOutlineMenu />}
         />
       </Box>
+      <IconButton
+        onClick={toggleColorMode}
+        backgroundColor="inherit"
+        aria-label="Toggle sidebar"
+        icon={colorMode === "light" ? <FaRegMoon /> : <FaRegSun />}
+      />
       <Spacer />
       <Box>
         <InputGroup>

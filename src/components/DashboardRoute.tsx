@@ -1,8 +1,9 @@
 import {
-  Box,
+  Flex,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
+  Box,
 } from "@chakra-ui/react";
 import AppContext from "AppContext";
 import React, { useContext } from "react";
@@ -25,27 +26,29 @@ export default function DashboardRoute({
   return (
     <Route path={path}>
       <Header />
-      <Sidebar />
-      <Box marginLeft={56} marginTop={14} padding={3}>
-        <Breadcrumb mb={4}>
-          <BreadcrumbItem>
-            <Link href="/">
-              <BreadcrumbLink>Home</BreadcrumbLink>
-            </Link>
-          </BreadcrumbItem>
+      <Flex marginTop={14} height="calc(100vh - 56px)">
+        <Sidebar />
+        <Box flex={1} padding={4} overflow="auto">
+          <Breadcrumb mb={4}>
+            <BreadcrumbItem>
+              <Link href="/">
+                <BreadcrumbLink>Home</BreadcrumbLink>
+              </Link>
+            </BreadcrumbItem>
 
-          <BreadcrumbItem isCurrentPage>
-            <BreadcrumbLink href={path}>
-              {path
-                .replace(/\//g, "")
-                .split(" ")
-                .map((w) => w[0].toUpperCase() + w.substr(1).toLowerCase())
-                .join(" ")}
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-        </Breadcrumb>
-        {children}
-      </Box>
+            <BreadcrumbItem isCurrentPage>
+              <BreadcrumbLink href={path}>
+                {path
+                  .replace(/\//g, "")
+                  .split(" ")
+                  .map((w) => w[0].toUpperCase() + w.substr(1).toLowerCase())
+                  .join(" ")}
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+          </Breadcrumb>
+          {children}
+        </Box>
+      </Flex>
     </Route>
   );
 }

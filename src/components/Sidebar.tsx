@@ -30,15 +30,12 @@ const sidebarItems = [
 export default function Sidebar() {
   return (
     <Flex
-      position="fixed"
       direction="column"
       width={56}
-      top={14}
-      bottom={0}
-      left={0}
       borderRight="1px"
       borderRightColor="gray.200"
       boxShadow="base"
+      overflow="auto"
     >
       {sidebarItems.map((item, index) => (
         <AppLink

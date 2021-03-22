@@ -9,7 +9,7 @@ import Holiday from "pages/Holidays";
 import Leaves from "pages/Leaves";
 import Login from "pages/Login";
 import Signup from "pages/Signup";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchData } from "services/fetchData";
 import { Redirect, Route, Switch, useLocation } from "wouter";
 

@@ -3,6 +3,7 @@ import {
   FormControl,
   FormErrorMessage,
   FormLabel,
+  HStack,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -10,10 +11,13 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Radio,
+  RadioGroup,
   Textarea,
+  VisuallyHidden,
 } from "@chakra-ui/react";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useRef } from "react";
+import { useMemo } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Controller, useForm } from "react-hook-form";
@@ -29,6 +33,12 @@ type NewLeaveProps = {
   onSubmit: (values: NewLeaveInputs) => void;
 };
 
+enum DayPart {
+  ALL = "ALL",
+  MORNING = "MORNING",
+  AFTERNOON = "AFTERNOON",
+}
+
 export type NewLeaveInputs = {
   startAt: Date;
   endAt: Date;
@@ -37,77 +47,18 @@ export type NewLeaveInputs = {
 
 const newLeaveSchema = yup.object().shape({
   startAt: yup.date().required(),
-  endAt: yup
-    .date()
-    .min(yup.ref("startAt"), "end time can't be before start time"),
+  endAt: yup.date().required(),
   reason: yup.string().required(),
 });
 
-const getNextStartTime = () => {
-  const currentDate = new Date();
-
-  if (currentDate.getDay() === 5 && currentDate.getHours() >= 14) {
-    currentDate.setDate(currentDate.getDate() + 1);
-    currentDate.setHours(9, 0, 0, 0);
-    return currentDate;
-  }
-
-  if (currentDate.getDay() === 6) {
-    currentDate.setDate(currentDate.getDate() + 2);
-    currentDate.setHours(9, 0, 0, 0);
-    return currentDate;
-  }
-
-  if (currentDate.getDay() === 0) {
-    currentDate.setDate(currentDate.getDate() + 1);
-    currentDate.setHours(9, 0, 0, 0);
-    return currentDate;
-  }
-
-  if (currentDate.getHours() < 9) {
-    currentDate.setHours(9, 0, 0, 0);
-  } else if (currentDate.getHours() < 14) {
-    currentDate.setHours(14, 0, 0, 0);
-  } else {
-    if (currentDate.getDay() === 5) {
-      currentDate.setDate(currentDate.getDate() + 3);
-    }
-    currentDate.setDate(currentDate.getDate() + 1);
-    currentDate.setHours(9, 0, 0, 0);
-  }
-  return currentDate;
-};
-
-const getNextEndTime = (date: Date) => {
-  const currentDate = new Date(date);
-
-  if (currentDate.getDay() === 5 && currentDate.getHours() >= 18) {
-    currentDate.setDate(currentDate.getDate() + 1);
-    currentDate.setHours(14, 0, 0, 0);
-    return currentDate;
-  }
-
-  if (currentDate.getDay() === 6) {
-    currentDate.setDate(currentDate.getDate() + 2);
-    currentDate.setHours(14, 0, 0, 0);
-    return currentDate;
-  }
-
-  if (currentDate.getDay() === 0) {
-    currentDate.setDate(currentDate.getDate() + 1);
-    currentDate.setHours(14, 0, 0, 0);
-    return currentDate;
-  }
-
-  if (currentDate.getHours() < 14) {
-    currentDate.setHours(14, 0, 0, 0);
-  } else if (currentDate.getHours() < 18) {
-    currentDate.setHours(18, 0, 0, 0);
-  } else {
-    currentDate.setDate(currentDate.getDate() + 1);
-    currentDate.setHours(14, 0, 0, 0);
-  }
-  return currentDate;
+const getNextBusinessDay = () => {
+  const date = new Date();
+  const day = date.getDay();
+  let add = 1;
+  if (day === 5) add = 3; // Friday
+  if (day === 6) add = 2; // Saturday
+  date.setDate(date.getDate() + add);
+  return date;
 };
 
 function EditLeaveModal({
@@ -117,7 +68,6 @@ function EditLeaveModal({
   onClose,
   onSubmit,
 }: NewLeaveProps) {
-  const endAtRef = useRef<DatePicker>(null);
   const {
     register,
     watch,
@@ -128,10 +78,67 @@ function EditLeaveModal({
   } = useForm<NewLeaveInputs>({
     resolver: yupResolver(newLeaveSchema),
     defaultValues: {
-      startAt: leave ? new Date(leave.startAt) : getNextStartTime(),
-      endAt: leave ? new Date(leave.endAt) : getNextEndTime(new Date()),
+      startAt: leave
+        ? new Date(leave.startAt)
+        : new Date(getNextBusinessDay().setHours(9, 0, 0, 0)),
+      endAt: leave
+        ? new Date(leave.endAt)
+        : new Date(getNextBusinessDay().setHours(18, 0, 0, 0)),
     },
   });
+
+  const handleDayPartChange = (value: DayPart) => {
+    const startAt = watch("startAt");
+    const endAt = watch("endAt");
+    switch (value) {
+      case DayPart.MORNING:
+        setValue("startAt", new Date(startAt.setHours(9, 0, 0, 0)));
+        setValue("endAt", new Date(endAt.setHours(14, 0, 0, 0)));
+        return;
+      case DayPart.AFTERNOON:
+        setValue("startAt", new Date(startAt.setHours(14, 0, 0, 0)));
+        setValue("endAt", new Date(endAt.setHours(18, 0, 0, 0)));
+        return;
+      case DayPart.ALL:
+      default:
+        setValue("startAt", new Date(startAt.setHours(9, 0, 0, 0)));
+        setValue("endAt", new Date(endAt.setHours(18, 0, 0, 0)));
+        return;
+    }
+  };
+
+  const radioValue = useMemo(() => {
+    const startAt = watch("startAt");
+    const endAt = watch("endAt");
+    if (startAt.getHours() === 9 && endAt.getHours() === 18) {
+      return DayPart.ALL;
+    }
+    if (startAt.getHours() === 9 && endAt.getHours() === 14) {
+      return DayPart.MORNING;
+    }
+    if (startAt.getHours() === 14 && endAt.getHours() === 18) {
+      return DayPart.AFTERNOON;
+    }
+  }, [watch]);
+
+  const handleChange = (value: Date) => {
+    if (!value) return;
+    const year = value.getFullYear();
+    const month = value.getMonth();
+    const date = value.getDate();
+
+    const startAt = new Date(watch("startAt"));
+    startAt.setFullYear(year);
+    startAt.setMonth(month);
+    startAt.setDate(date);
+    setValue("startAt", startAt);
+
+    const endAt = new Date(watch("endAt"));
+    endAt.setFullYear(year);
+    endAt.setMonth(month);
+    endAt.setDate(date);
+    setValue("endAt", endAt);
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -142,29 +149,17 @@ function EditLeaveModal({
           <ModalCloseButton />
           <ModalBody>
             <FormControl isRequired isInvalid={Boolean(errors.startAt)} mt={4}>
-              <FormLabel htmlFor="startAt">From</FormLabel>
+              <FormLabel htmlFor="startAt">Date</FormLabel>
               <Controller
                 name="startAt"
                 control={control}
-                render={({ onChange, value }) => (
+                render={({ value }) => (
                   <DatePicker
                     selected={value}
-                    onChange={onChange}
-                    onCalendarClose={() => {
-                      endAtRef.current?.setOpen(true);
-                      setValue("endAt", getNextEndTime(value));
-                    }}
-                    showTimeSelect
-                    includeTimes={[9, 14].map(
-                      (hour) => new Date(new Date().setHours(hour, 0, 0, 0))
-                    )}
-                    dateFormat="E MMM d, yyyy h:mm aa"
-                    selectsStart
-                    startDate={value}
-                    endDate={watch("endAt")}
+                    onChange={handleChange}
+                    dateFormat="E MMM d, yyyy"
                     placeholderText="Select a weekday"
                     autoFocus={!Boolean(leave)}
-                    timeIntervals={60}
                     filterDate={(date) =>
                       date.getDay() !== 0 &&
                       date.getDay() !== 6 &&
@@ -175,39 +170,26 @@ function EditLeaveModal({
               />
               <FormErrorMessage>{errors.startAt?.message}</FormErrorMessage>
             </FormControl>
-            <FormControl isRequired isInvalid={Boolean(errors.endAt)} mt={4}>
-              <FormLabel htmlFor="endAt">To</FormLabel>
+            <VisuallyHidden>
               <Controller
                 name="endAt"
                 control={control}
                 render={({ onChange, value }) => (
-                  <DatePicker
-                    selected={value}
-                    onChange={onChange}
-                    showTimeSelect
-                    includeTimes={[14, 18].map(
-                      (hour) => new Date(new Date().setHours(hour, 0, 0, 0))
-                    )}
-                    selectsEnd
-                    startDate={watch("startAt")}
-                    endDate={value}
-                    minDate={watch("startAt")}
-                    dateFormat="E MMM d, yyyy h:mm aa"
-                    placeholderText="Select a weekday"
-                    ref={endAtRef}
-                    timeIntervals={60}
-                    filterDate={(date) =>
-                      date.getDay() !== 0 &&
-                      date.getDay() !== 6 &&
-                      date >= new Date()
-                    }
-                    // @ts-ignore
-                    filterTime={(time: Date) => time > watch("startAt")}
-                  />
+                  <DatePicker selected={value} onChange={onChange} />
                 )}
               />
-              <FormErrorMessage>{errors.endAt?.message}</FormErrorMessage>
-            </FormControl>
+            </VisuallyHidden>
+            <RadioGroup
+              onChange={handleDayPartChange}
+              value={radioValue}
+              mt={4}
+            >
+              <HStack direction="row">
+                <Radio value={DayPart.ALL}>All day</Radio>
+                <Radio value={DayPart.MORNING}>Only morning</Radio>
+                <Radio value={DayPart.AFTERNOON}>Only afternoon</Radio>
+              </HStack>
+            </RadioGroup>
             <FormControl isRequired isInvalid={Boolean(errors.reason)} mt={4}>
               <FormLabel htmlFor="reason">Reason</FormLabel>
               <Textarea
