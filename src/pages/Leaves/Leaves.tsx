@@ -96,9 +96,6 @@ function Leaves() {
   }, []);
 
   const createLeave = async ({ startAt, endAt, reason }: NewLeaveInputs) => {
-    console.log("startAt", startAt);
-    console.log("endAt", endAt);
-    console.log("startAt", startAt);
     setIsLoading(true);
     try {
       const newLeave = await fetchData(`/leaves/add`, {

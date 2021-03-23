@@ -14,10 +14,8 @@ import {
   Radio,
   RadioGroup,
   Textarea,
-  VisuallyHidden,
 } from "@chakra-ui/react";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useMemo } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Controller, useForm } from "react-hook-form";
@@ -45,9 +43,15 @@ export type NewLeaveInputs = {
   reason: string;
 };
 
+export type FormFields = {
+  leaveDate: Date;
+  dayPart: DayPart;
+  reason: string;
+};
+
 const newLeaveSchema = yup.object().shape({
-  startAt: yup.date().required(),
-  endAt: yup.date().required(),
+  leaveDate: yup.date().required(),
+  dayPart: yup.string().required(),
   reason: yup.string().required(),
 });
 
@@ -58,7 +62,23 @@ const getNextBusinessDay = () => {
   if (day === 5) add = 3; // Friday
   if (day === 6) add = 2; // Saturday
   date.setDate(date.getDate() + add);
+  date.setHours(0, 0, 0, 0);
   return date;
+};
+
+const getInitialDayPart = (leave: Leave) => {
+  const startAtHour = new Date(leave.startAt).getHours();
+  const endAtHour = new Date(leave.endAt).getHours();
+
+  if (startAtHour === 9 && endAtHour === 14) {
+    return DayPart.MORNING;
+  }
+  if (startAtHour === 14 && endAtHour === 18) {
+    return DayPart.AFTERNOON;
+  }
+  if (startAtHour === 9 && endAtHour === 18) {
+    return DayPart.ALL;
+  }
 };
 
 function EditLeaveModal({
@@ -68,95 +88,52 @@ function EditLeaveModal({
   onClose,
   onSubmit,
 }: NewLeaveProps) {
-  const {
-    register,
-    watch,
-    handleSubmit,
-    setValue,
-    errors,
-    control,
-  } = useForm<NewLeaveInputs>({
+  const { register, handleSubmit, errors, control } = useForm<FormFields>({
     resolver: yupResolver(newLeaveSchema),
-    defaultValues: {
-      startAt: leave
-        ? new Date(leave.startAt)
-        : new Date(getNextBusinessDay().setHours(9, 0, 0, 0)),
-      endAt: leave
-        ? new Date(leave.endAt)
-        : new Date(getNextBusinessDay().setHours(18, 0, 0, 0)),
-    },
   });
 
-  const handleDayPartChange = (value: DayPart) => {
-    const startAt = watch("startAt");
-    const endAt = watch("endAt");
-    switch (value) {
-      case DayPart.MORNING:
-        setValue("startAt", new Date(startAt.setHours(9, 0, 0, 0)));
-        setValue("endAt", new Date(endAt.setHours(14, 0, 0, 0)));
-        return;
-      case DayPart.AFTERNOON:
-        setValue("startAt", new Date(startAt.setHours(14, 0, 0, 0)));
-        setValue("endAt", new Date(endAt.setHours(18, 0, 0, 0)));
-        return;
-      case DayPart.ALL:
-      default:
-        setValue("startAt", new Date(startAt.setHours(9, 0, 0, 0)));
-        setValue("endAt", new Date(endAt.setHours(18, 0, 0, 0)));
-        return;
+  const handleSubmitLogic = ({ leaveDate, dayPart, reason }: FormFields) => {
+    const startAt = new Date(leaveDate);
+    const endAt = new Date(leaveDate);
+    if (dayPart === DayPart.MORNING) {
+      startAt.setHours(9, 0, 0, 0);
+      endAt.setHours(14, 0, 0, 0);
     }
-  };
-
-  const radioValue = useMemo(() => {
-    const startAt = watch("startAt");
-    const endAt = watch("endAt");
-    if (startAt.getHours() === 9 && endAt.getHours() === 18) {
-      return DayPart.ALL;
+    if (dayPart === DayPart.AFTERNOON) {
+      startAt.setHours(14, 0, 0, 0);
+      endAt.setHours(18, 0, 0, 0);
     }
-    if (startAt.getHours() === 9 && endAt.getHours() === 14) {
-      return DayPart.MORNING;
+    if (dayPart === DayPart.ALL) {
+      startAt.setHours(9, 0, 0, 0);
+      endAt.setHours(18, 0, 0, 0);
     }
-    if (startAt.getHours() === 14 && endAt.getHours() === 18) {
-      return DayPart.AFTERNOON;
-    }
-  }, [watch]);
-
-  const handleChange = (value: Date) => {
-    if (!value) return;
-    const year = value.getFullYear();
-    const month = value.getMonth();
-    const date = value.getDate();
-
-    const startAt = new Date(watch("startAt"));
-    startAt.setFullYear(year);
-    startAt.setMonth(month);
-    startAt.setDate(date);
-    setValue("startAt", startAt);
-
-    const endAt = new Date(watch("endAt"));
-    endAt.setFullYear(year);
-    endAt.setMonth(month);
-    endAt.setDate(date);
-    setValue("endAt", endAt);
+    onSubmit({ startAt, endAt, reason });
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <form noValidate onSubmit={handleSubmit(onSubmit)}>
+        <form noValidate onSubmit={handleSubmit(handleSubmitLogic)}>
           <ModalHeader>{leave ? "Edit Leave" : "Create Leave"}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <FormControl isRequired isInvalid={Boolean(errors.startAt)} mt={4}>
-              <FormLabel htmlFor="startAt">Date</FormLabel>
+            <FormControl
+              isRequired
+              isInvalid={Boolean(errors.leaveDate)}
+              mt={4}
+            >
+              <FormLabel htmlFor="leaveDate">Date</FormLabel>
               <Controller
-                name="startAt"
+                name="leaveDate"
                 control={control}
-                render={({ value }) => (
+                defaultValue={
+                  leave ? new Date(leave.startAt) : getNextBusinessDay()
+                }
+                render={({ onChange, value }) => (
                   <DatePicker
                     selected={value}
-                    onChange={handleChange}
+                    onChange={onChange}
                     dateFormat="E MMM d, yyyy"
                     placeholderText="Select a weekday"
                     autoFocus={!Boolean(leave)}
@@ -168,34 +145,36 @@ function EditLeaveModal({
                   />
                 )}
               />
-              <FormErrorMessage>{errors.startAt?.message}</FormErrorMessage>
+              <FormErrorMessage>{errors.leaveDate?.message}</FormErrorMessage>
             </FormControl>
-            <VisuallyHidden>
+            <FormControl isRequired isInvalid={Boolean(errors.dayPart)} mt={4}>
               <Controller
-                name="endAt"
+                name="dayPart"
                 control={control}
+                defaultValue={leave ? getInitialDayPart(leave) : DayPart.ALL}
                 render={({ onChange, value }) => (
-                  <DatePicker selected={value} onChange={onChange} />
+                  <RadioGroup value={value} onChange={onChange}>
+                    <HStack>
+                      <Radio id={DayPart.ALL} value={DayPart.ALL}>
+                        All day
+                      </Radio>
+                      <Radio id={DayPart.MORNING} value={DayPart.MORNING}>
+                        Only morning
+                      </Radio>
+                      <Radio id={DayPart.AFTERNOON} value={DayPart.AFTERNOON}>
+                        Only afternoon
+                      </Radio>
+                    </HStack>
+                  </RadioGroup>
                 )}
               />
-            </VisuallyHidden>
-            <RadioGroup
-              onChange={handleDayPartChange}
-              value={radioValue}
-              mt={4}
-            >
-              <HStack direction="row">
-                <Radio value={DayPart.ALL}>All day</Radio>
-                <Radio value={DayPart.MORNING}>Only morning</Radio>
-                <Radio value={DayPart.AFTERNOON}>Only afternoon</Radio>
-              </HStack>
-            </RadioGroup>
+            </FormControl>
             <FormControl isRequired isInvalid={Boolean(errors.reason)} mt={4}>
               <FormLabel htmlFor="reason">Reason</FormLabel>
               <Textarea
+                defaultValue={leave ? leave.reason : ""}
                 ref={register}
                 name="reason"
-                defaultValue={leave?.reason}
               />
               <FormErrorMessage>{errors.reason?.message}</FormErrorMessage>
             </FormControl>
