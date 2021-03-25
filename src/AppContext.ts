@@ -1,7 +1,7 @@
-import { createContext } from "react";
+import { createContext } from 'react';
 
 type User = {
-  id: number;
+  id: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -9,14 +9,23 @@ type User = {
   updatedAt: string;
 };
 
+export const initialUser = {
+  id: '',
+  email: '',
+  firstName: '',
+  lastName: '',
+  createdAt: '',
+  updatedAt: '',
+};
+
 type AppContextValues = {
-  currentUser: User | null;
+  currentUser: User;
   setCurrentUser: Function;
   isLoading: boolean;
 };
 
 const AppContext = createContext<AppContextValues>({
-  currentUser: null,
+  currentUser: initialUser,
   setCurrentUser: () => {},
   isLoading: false,
 });

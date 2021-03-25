@@ -1,27 +1,27 @@
-import { Spinner } from "@chakra-ui/react";
-import AppContext from "AppContext";
-import { AbilityContext } from "components/Can";
-import DashboardRoute from "components/DashboardRoute";
-import ability, { defineRulesFor } from "config/ability";
-import Dashboard from "pages/Dashboard";
-import Employee from "pages/Employee";
-import Holiday from "pages/Holidays";
-import Leaves from "pages/Leaves";
-import Login from "pages/Login";
-import Signup from "pages/Signup";
-import { useEffect, useState } from "react";
-import { fetchData } from "services/fetchData";
-import { Redirect, Route, Switch, useLocation } from "wouter";
+import { Spinner } from '@chakra-ui/react';
+import AppContext, { initialUser } from 'AppContext';
+import { AbilityContext } from 'components/Can';
+import DashboardRoute from 'components/DashboardRoute';
+import ability, { defineRulesFor } from 'config/ability';
+import Dashboard from 'pages/Dashboard';
+import Employee from 'pages/Employee';
+import Holiday from 'pages/Holidays';
+import Leaves from 'pages/Leaves';
+import Login from 'pages/Login';
+import Signup from 'pages/Signup';
+import { useEffect, useState } from 'react';
+import { fetchData } from 'services/fetchData';
+import { Redirect, Route, Switch, useLocation } from 'wouter';
 
 function App() {
   const [, setLocation] = useLocation();
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(initialUser);
   const [isLoading, setIsLoading] = useState(true); // bootstrap app
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const user = await fetchData("/auth/me");
+        const user = await fetchData('/auth/me');
         setCurrentUser(user);
         ability.update(defineRulesFor(user));
         setIsLoading(false);

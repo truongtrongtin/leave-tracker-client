@@ -10,51 +10,38 @@ import {
   Text,
   useDisclosure,
   useToast,
-} from "@chakra-ui/react";
-import { Can } from "components/Can";
-import LDTable from "components/LDTable/LDTable";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { BiDotsVerticalRounded } from "react-icons/bi";
-import { fetchData } from "services/fetchData";
-import { User } from "../Employee/Employee";
-import DeleteLeaveModal from "./DeleteLeaveModal";
-import NewLeaveModal, { NewLeaveInputs } from "./NewLeaveModal";
+} from '@chakra-ui/react';
+import { Can } from 'components/Can';
+import LDTable from 'components/LDTable/LDTable';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { BiDotsVerticalRounded } from 'react-icons/bi';
+import { fetchData } from 'services/fetchData';
+import { User } from '../Employee/Employee';
+import DeleteLeaveModal from './DeleteLeaveModal';
+import NewLeaveModal, { NewLeaveInputs } from './NewLeaveModal';
 
 export type Leave = {
   id: number;
   startAt: Date;
   endAt: Date;
-  noOfDays: any;
   reason: string;
   status: string;
   user: User;
 };
 
 enum LeaveStatus {
-  PENDING = "PENDING",
-  APPROVED = "APPROVED",
-  DECLINED = "DECLINED",
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  DECLINED = 'DECLINED',
 }
 
-function calculateLeaveDays(startDate: Date, endDate: Date) {
-  const totalHours = (endDate.getTime() - startDate.getTime()) / 1000 / 3600;
-  const remainder = totalHours % 24;
-  let remainWorkDay;
-  if (remainder === 0) {
-    remainWorkDay = 0;
-  } else if (remainder >= 9) {
-    remainWorkDay = 1;
-  } else {
-    remainWorkDay = 0.5;
-  }
-  let numWorkDays = 0;
-  while (startDate <= endDate) {
-    if (startDate.getDay() !== 0 && startDate.getDay() !== 6) {
-      numWorkDays++;
-    }
-    startDate.setDate(startDate.getDate() + 1);
-  }
-  return numWorkDays - 1 + remainWorkDay;
+function calculateLeaveDays(leave: Leave) {
+  const startAtHour = new Date(leave.startAt).getHours();
+  const endAtour = new Date(leave.endAt).getHours();
+
+  if (startAtHour === 9 && endAtour === 14) return 0.5;
+  if (startAtHour === 14 && endAtour === 18) return 0.5;
+  if (startAtHour === 9 && endAtour === 18) return 1;
 }
 
 function Leaves() {
@@ -85,7 +72,7 @@ function Leaves() {
     const getAllLeaves = async () => {
       try {
         setIsLoading(true);
-        const leaves = await fetchData("/leaves");
+        const leaves = await fetchData('/leaves');
         setLeaves(leaves.items);
         setIsLoading(false);
       } catch (error) {
@@ -99,7 +86,7 @@ function Leaves() {
     setIsLoading(true);
     try {
       const newLeave = await fetchData(`/leaves/add`, {
-        method: "POST",
+        method: 'POST',
         body: new URLSearchParams({
           startAt: startAt.toISOString(),
           endAt: endAt.toISOString(),
@@ -120,7 +107,7 @@ function Leaves() {
     try {
       setIsLoading(true);
       const newLeave = await fetchData(`/leaves/${selectedLeave.id}/edit`, {
-        method: "POST",
+        method: 'POST',
         body: new URLSearchParams({
           startAt: startAt.toISOString(),
           endAt: endAt.toISOString(),
@@ -135,7 +122,7 @@ function Leaves() {
       setIsLoading(false);
       onCloseEdit();
     } catch (error) {
-      toast({ description: error.message, status: "error" });
+      toast({ description: error.message, status: 'error' });
       setIsLoading(false);
       onCloseEdit();
     }
@@ -147,7 +134,7 @@ function Leaves() {
       try {
         setIsLoading(true);
         const newLeave = await fetchData(`/leaves/${leave.id}/edit`, {
-          method: "POST",
+          method: 'POST',
           body: new URLSearchParams({ status }),
         });
         const newLeaves = leaves.map((leave) => {
@@ -157,11 +144,11 @@ function Leaves() {
         setLeaves(newLeaves);
         setIsLoading(false);
       } catch (error) {
-        toast({ description: error.message, status: "error" });
+        toast({ description: error.message, status: 'error' });
         setIsLoading(false);
       }
     },
-    [leaves, toast]
+    [leaves, toast],
   );
 
   const deleteLeave = useCallback(async () => {
@@ -169,14 +156,14 @@ function Leaves() {
     try {
       setIsLoading(true);
       await fetchData(`/leaves/${selectedLeave.id}/delete`, {
-        method: "POST",
+        method: 'POST',
       });
       const newLeaves = leaves.filter((l) => l.id !== selectedLeave.id);
       setIsLoading(false);
       onCloseDelete();
       setLeaves(newLeaves);
     } catch (error) {
-      toast({ description: error.message, status: "error" });
+      toast({ description: error.message, status: 'error' });
       setIsLoading(false);
     }
   }, [leaves, selectedLeave, onCloseDelete, toast]);
@@ -185,25 +172,22 @@ function Leaves() {
     () =>
       leaves.map((leave) => {
         return {
-          employee: leave.user.firstName + " " + leave.user.lastName,
+          employee: leave.user.firstName + ' ' + leave.user.lastName,
           startAt: new Date(leave.startAt).toLocaleString(undefined, {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
           }),
           endAt: new Date(leave.endAt).toLocaleString(undefined, {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
           }),
-          noOfDays: calculateLeaveDays(
-            new Date(leave.startAt),
-            new Date(leave.endAt)
-          ),
+          noOfDays: calculateLeaveDays(leave),
           reason: leave.reason,
           status: (
             <>
@@ -249,41 +233,41 @@ function Leaves() {
           ),
         };
       }),
-    [leaves, changeLeaveStatus, onOpenDelete, onOpenEdit]
+    [leaves, changeLeaveStatus, onOpenDelete, onOpenEdit],
   );
 
   const columns = useMemo(
     () => [
       {
-        Header: "Employee",
-        accessor: "employee",
+        Header: 'Employee',
+        accessor: 'employee',
       },
       {
-        Header: "Start At",
-        accessor: "startAt",
+        Header: 'Start At',
+        accessor: 'startAt',
       },
       {
-        Header: "End At",
-        accessor: "endAt",
+        Header: 'End At',
+        accessor: 'endAt',
       },
       {
-        Header: "No Of Days",
-        accessor: "noOfDays",
+        Header: 'No Of Days',
+        accessor: 'noOfDays',
       },
       {
-        Header: "Reason",
-        accessor: "reason",
+        Header: 'Reason',
+        accessor: 'reason',
       },
       {
-        Header: "Status",
-        accessor: "status",
+        Header: 'Status',
+        accessor: 'status',
       },
       {
-        Header: "Action",
-        accessor: "action",
+        Header: 'Action',
+        accessor: 'action',
       },
     ],
-    []
+    [],
   );
 
   return (
@@ -295,6 +279,7 @@ function Leaves() {
         onClose={onCloseCreate}
         isLoading={isLoading}
         onSubmit={createLeave}
+        onDelete={deleteLeave}
       />
       {selectedLeave && (
         <NewLeaveModal
@@ -303,6 +288,7 @@ function Leaves() {
           onClose={onCloseEdit}
           isLoading={isLoading}
           onSubmit={updateLeave}
+          onDelete={deleteLeave}
         />
       )}
       <DeleteLeaveModal

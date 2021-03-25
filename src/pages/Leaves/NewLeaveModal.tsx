@@ -13,15 +13,18 @@ import {
   ModalOverlay,
   Radio,
   RadioGroup,
+  Spacer,
   Textarea,
-} from "@chakra-ui/react";
-import { yupResolver } from "@hookform/resolvers/yup";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { Controller, useForm } from "react-hook-form";
-import * as yup from "yup";
-import "./date-picker.css";
-import { Leave } from "./Leaves";
+} from '@chakra-ui/react';
+import { yupResolver } from '@hookform/resolvers/yup';
+import AppContext from 'AppContext';
+import { useContext } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { Controller, useForm } from 'react-hook-form';
+import * as yup from 'yup';
+import './date-picker.css';
+import { Leave } from './Leaves';
 
 type NewLeaveProps = {
   leave?: Leave;
@@ -29,12 +32,13 @@ type NewLeaveProps = {
   isLoading: boolean;
   onClose: () => void;
   onSubmit: (values: NewLeaveInputs) => void;
+  onDelete: () => void;
 };
 
-enum DayPart {
-  ALL = "ALL",
-  MORNING = "MORNING",
-  AFTERNOON = "AFTERNOON",
+export enum DayPart {
+  ALL = 'ALL',
+  MORNING = 'MORNING',
+  AFTERNOON = 'AFTERNOON',
 }
 
 export type NewLeaveInputs = {
@@ -87,7 +91,11 @@ function EditLeaveModal({
   isLoading,
   onClose,
   onSubmit,
+  onDelete,
 }: NewLeaveProps) {
+  const { currentUser } = useContext(AppContext);
+  const isReadOnly = leave ? currentUser.id !== leave.user.id : false;
+
   const { register, handleSubmit, errors, control } = useForm<FormFields>({
     resolver: yupResolver(newLeaveSchema),
   });
@@ -115,7 +123,13 @@ function EditLeaveModal({
       <ModalOverlay />
       <ModalContent>
         <form noValidate onSubmit={handleSubmit(handleSubmitLogic)}>
-          <ModalHeader>{leave ? "Edit Leave" : "Create Leave"}</ModalHeader>
+          <ModalHeader>
+            {leave
+              ? isReadOnly
+                ? `${leave.user.firstName}'s leave`
+                : 'Edit Leave'
+              : 'Create Leave'}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl
@@ -132,6 +146,7 @@ function EditLeaveModal({
                 }
                 render={({ onChange, value }) => (
                   <DatePicker
+                    readOnly={isReadOnly}
                     selected={value}
                     onChange={onChange}
                     dateFormat="E MMM d, yyyy"
@@ -155,13 +170,25 @@ function EditLeaveModal({
                 render={({ onChange, value }) => (
                   <RadioGroup value={value} onChange={onChange}>
                     <HStack>
-                      <Radio id={DayPart.ALL} value={DayPart.ALL}>
+                      <Radio
+                        isReadOnly={isReadOnly}
+                        id={DayPart.ALL}
+                        value={DayPart.ALL}
+                      >
                         All day
                       </Radio>
-                      <Radio id={DayPart.MORNING} value={DayPart.MORNING}>
+                      <Radio
+                        isReadOnly={isReadOnly}
+                        id={DayPart.MORNING}
+                        value={DayPart.MORNING}
+                      >
                         Only morning
                       </Radio>
-                      <Radio id={DayPart.AFTERNOON} value={DayPart.AFTERNOON}>
+                      <Radio
+                        isReadOnly={isReadOnly}
+                        id={DayPart.AFTERNOON}
+                        value={DayPart.AFTERNOON}
+                      >
                         Only afternoon
                       </Radio>
                     </HStack>
@@ -172,7 +199,8 @@ function EditLeaveModal({
             <FormControl isRequired isInvalid={Boolean(errors.reason)} mt={4}>
               <FormLabel htmlFor="reason">Reason</FormLabel>
               <Textarea
-                defaultValue={leave ? leave.reason : ""}
+                isReadOnly={isReadOnly}
+                defaultValue={leave ? leave.reason : ''}
                 ref={register}
                 name="reason"
               />
@@ -180,12 +208,20 @@ function EditLeaveModal({
             </FormControl>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={onClose}>
+            {!isReadOnly && leave && (
+              <Button colorScheme="red" mr={3} onClick={onDelete}>
+                Delete
+              </Button>
+            )}
+            <Spacer />
+            <Button mr={3} onClick={onClose}>
               Close
             </Button>
-            <Button variant="outline" type="submit" isLoading={isLoading}>
-              Submit
-            </Button>
+            {!isReadOnly && (
+              <Button colorScheme="blue" type="submit" isLoading={isLoading}>
+                Submit
+              </Button>
+            )}
           </ModalFooter>
         </form>
       </ModalContent>

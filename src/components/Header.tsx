@@ -11,14 +11,14 @@ import {
   Link,
   Spacer,
   useColorMode,
-} from "@chakra-ui/react";
-import AppContext from "AppContext";
-import logo from "assets/icons/react.svg";
-import { useContext } from "react";
-import { AiOutlineMenu, AiOutlineSearch } from "react-icons/ai";
-import { BsBell, BsChat } from "react-icons/bs";
-import { FaRegMoon, FaRegSun } from "react-icons/fa";
-import { Link as RouteLink, useLocation } from "wouter";
+} from '@chakra-ui/react';
+import AppContext from 'AppContext';
+import logo from 'assets/icons/react.svg';
+import { useContext } from 'react';
+import { AiOutlineMenu, AiOutlineSearch } from 'react-icons/ai';
+import { BsBell, BsChat } from 'react-icons/bs';
+import { FaRegMoon, FaRegSun } from 'react-icons/fa';
+import { Link as RouteLink, useLocation } from 'wouter';
 
 export default function Header() {
   const [, setLocation] = useLocation();
@@ -26,11 +26,11 @@ export default function Header() {
   const { colorMode, toggleColorMode } = useColorMode();
 
   const logout = async () => {
-    await fetch("/auth/logout", {
-      method: "POST",
+    await fetch('/auth/logout', {
+      method: 'POST',
     });
     setCurrentUser(null);
-    setLocation("/login");
+    setLocation('/login');
   };
 
   return (
@@ -48,7 +48,7 @@ export default function Header() {
       zIndex={5}
     >
       <Flex justifyContent="center" width={56}>
-        <RouteLink href="/leaves">
+        <RouteLink href="/">
           <Link>
             <Image width="40px" height="40px" src={logo} alt="logo" />
           </Link>
@@ -65,7 +65,7 @@ export default function Header() {
         onClick={toggleColorMode}
         backgroundColor="inherit"
         aria-label="Toggle sidebar"
-        icon={colorMode === "light" ? <FaRegMoon /> : <FaRegSun />}
+        icon={colorMode === 'light' ? <FaRegMoon /> : <FaRegSun />}
       />
       <Spacer />
       <Box>
