@@ -15,17 +15,17 @@ import {
   InputGroup,
   InputRightElement,
   Text,
-} from "@chakra-ui/react";
-import { yupResolver } from "@hookform/resolvers/yup";
-import AppContext from "AppContext";
-import AppLink from "components/AppLink";
-import ability, { defineRulesFor } from "config/ability";
-import React, { useContext, useState } from "react";
-import { useForm } from "react-hook-form";
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { fetchData } from "services/fetchData";
-import { Redirect, useLocation } from "wouter";
-import * as yup from "yup";
+} from '@chakra-ui/react';
+import { yupResolver } from '@hookform/resolvers/yup';
+import AppContext from 'contexts/AppContext';
+import AppLink from 'components/AppLink';
+import ability, { defineRulesFor } from 'config/ability';
+import React, { useContext, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+import { fetchData } from 'services/fetchData';
+import { Redirect, useLocation } from 'wouter';
+import * as yup from 'yup';
 
 type LoginInputs = {
   email: string;
@@ -39,7 +39,7 @@ const loginSchema = yup.object().shape({
 
 export default function Login() {
   const { currentUser, setCurrentUser } = useContext(AppContext);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [, setLocation] = useLocation();
@@ -50,17 +50,17 @@ export default function Login() {
   const onSubmit = async ({ email, password }: LoginInputs) => {
     setIsLoading(true);
     try {
-      await fetchData("/auth/login", {
-        method: "POST",
+      await fetchData('/auth/login', {
+        method: 'POST',
         body: new URLSearchParams({ email, password }),
       });
-      const user = await fetchData("/auth/me");
+      const user = await fetchData('/auth/me');
       setCurrentUser(user);
       ability.update(defineRulesFor(user));
       setIsLoading(false);
       setShowPassword(false);
-      setError("");
-      setLocation("/");
+      setError('');
+      setLocation('/');
     } catch (error) {
       setError(error.message);
       setIsLoading(false);
@@ -98,7 +98,7 @@ export default function Login() {
               <FormLabel htmlFor="password">Password</FormLabel>
               <InputGroup size="lg">
                 <Input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   ref={register}
                 />
@@ -128,14 +128,14 @@ export default function Login() {
               {isLoading ? (
                 <CircularProgress isIndeterminate size="24px" />
               ) : (
-                "Sign in"
+                'Sign in'
               )}
             </Button>
           </form>
         </Box>
         <Box textAlign="center">
           <Text>
-            Not a member?{" "}
+            Not a member?{' '}
             <AppLink color="teal.600" href="/signup">
               Signup now
             </AppLink>

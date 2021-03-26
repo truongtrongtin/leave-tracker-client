@@ -16,7 +16,7 @@ import LDTable from 'components/LDTable/LDTable';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BiDotsVerticalRounded } from 'react-icons/bi';
 import { fetchData } from 'services/fetchData';
-import { User } from '../Employee/Employee';
+import { User } from 'contexts/AppContext';
 import DeleteLeaveModal from './DeleteLeaveModal';
 import NewLeaveModal, { NewLeaveInputs } from './NewLeaveModal';
 

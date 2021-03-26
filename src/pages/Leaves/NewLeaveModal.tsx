@@ -13,15 +13,17 @@ import {
   ModalOverlay,
   Radio,
   RadioGroup,
+  Select,
   Spacer,
   Textarea,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
-import AppContext from 'AppContext';
-import { useContext } from 'react';
+import AppContext, { Role, User } from 'contexts/AppContext';
+import { useContext, useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Controller, useForm } from 'react-hook-form';
+import { fetchData } from 'services/fetchData';
 import * as yup from 'yup';
 import './date-picker.css';
 import { Leave } from './Leaves';
@@ -45,26 +47,29 @@ export type NewLeaveInputs = {
   startAt: Date;
   endAt: Date;
   reason: string;
+  userId?: string;
 };
 
 export type FormFields = {
+  userId: string;
   leaveDate: Date;
   dayPart: DayPart;
   reason: string;
 };
 
 const newLeaveSchema = yup.object().shape({
+  userId: yup.string().notRequired(),
   leaveDate: yup.date().required(),
   dayPart: yup.string().required(),
   reason: yup.string().required(),
 });
 
-const getNextBusinessDay = () => {
+const getCurrentBusinessDay = () => {
   const date = new Date();
   const day = date.getDay();
-  let add = 1;
-  if (day === 5) add = 3; // Friday
+  let add = 0;
   if (day === 6) add = 2; // Saturday
+  if (day === 0) add = 1; // Sunday
   date.setDate(date.getDate() + add);
   date.setHours(0, 0, 0, 0);
   return date;
@@ -85,7 +90,7 @@ const getInitialDayPart = (leave: Leave) => {
   }
 };
 
-function EditLeaveModal({
+function NewLeaveModal({
   leave,
   isOpen,
   isLoading,
@@ -94,13 +99,28 @@ function EditLeaveModal({
   onDelete,
 }: NewLeaveProps) {
   const { currentUser } = useContext(AppContext);
-  const isReadOnly = leave ? currentUser.id !== leave.user.id : false;
-
-  const { register, handleSubmit, errors, control } = useForm<FormFields>({
+  const [users, setUsers] = useState<User[]>([]);
+  const {
+    register,
+    handleSubmit,
+    errors,
+    control,
+    setValue,
+  } = useForm<FormFields>({
     resolver: yupResolver(newLeaveSchema),
   });
 
-  const handleSubmitLogic = ({ leaveDate, dayPart, reason }: FormFields) => {
+  const isEditing = Boolean(leave);
+  const isAdmin = currentUser?.role === Role.ADMIN;
+  const isCurrentUser = currentUser?.id === leave?.user.id;
+  const isReadOnly = !isAdmin && !isCurrentUser;
+
+  const handleSubmitLogic = ({
+    leaveDate,
+    dayPart,
+    reason,
+    userId,
+  }: FormFields) => {
     const startAt = new Date(leaveDate);
     const endAt = new Date(leaveDate);
     if (dayPart === DayPart.MORNING) {
@@ -115,8 +135,20 @@ function EditLeaveModal({
       startAt.setHours(9, 0, 0, 0);
       endAt.setHours(18, 0, 0, 0);
     }
-    onSubmit({ startAt, endAt, reason });
+    onSubmit({ startAt, endAt, reason, userId });
   };
+
+  useEffect(() => {
+    if (users.length) return;
+    const getAllUsers = async () => {
+      try {
+        const users = await fetchData('/users');
+        setUsers(users);
+        setValue('userId', leave?.user.id);
+      } catch (error) {}
+    };
+    getAllUsers();
+  }, [setValue, users, leave]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -124,14 +156,28 @@ function EditLeaveModal({
       <ModalContent>
         <form noValidate onSubmit={handleSubmit(handleSubmitLogic)}>
           <ModalHeader>
-            {leave
-              ? isReadOnly
-                ? `${leave.user.firstName}'s leave`
-                : 'Edit Leave'
-              : 'Create Leave'}
+            {isEditing ? `${leave?.user.firstName}'s leave` : 'Create Leave'}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+            {isAdmin && (
+              <FormControl isInvalid={Boolean(errors.userId)}>
+                <FormLabel htmlFor="userId">User</FormLabel>
+                <Select
+                  ref={register}
+                  name="userId"
+                  placeholder="Select option"
+                  defaultValue={leave?.user.id}
+                >
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.firstName} {user.lastName}
+                    </option>
+                  ))}
+                </Select>
+                <FormErrorMessage>{errors.userId?.message}</FormErrorMessage>
+              </FormControl>
+            )}
             <FormControl
               isRequired
               isInvalid={Boolean(errors.leaveDate)}
@@ -142,7 +188,7 @@ function EditLeaveModal({
                 name="leaveDate"
                 control={control}
                 defaultValue={
-                  leave ? new Date(leave.startAt) : getNextBusinessDay()
+                  leave ? new Date(leave.startAt) : getCurrentBusinessDay()
                 }
                 render={({ onChange, value }) => (
                   <DatePicker
@@ -155,7 +201,8 @@ function EditLeaveModal({
                     filterDate={(date) =>
                       date.getDay() !== 0 &&
                       date.getDay() !== 6 &&
-                      date >= new Date()
+                      (isAdmin ||
+                        date >= new Date(new Date().setHours(0, 0, 0, 0)))
                     }
                   />
                 )}
@@ -208,7 +255,7 @@ function EditLeaveModal({
             </FormControl>
           </ModalBody>
           <ModalFooter>
-            {!isReadOnly && leave && (
+            {!isReadOnly && isEditing && (
               <Button colorScheme="red" mr={3} onClick={onDelete}>
                 Delete
               </Button>
@@ -229,4 +276,4 @@ function EditLeaveModal({
   );
 }
 
-export default EditLeaveModal;
+export default NewLeaveModal;

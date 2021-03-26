@@ -1,31 +1,40 @@
 import { createContext } from 'react';
 
-type User = {
-  id: string;
+export enum Role {
+  MEMBER = 'MEMBER',
+  ADMIN = 'ADMIN',
+}
+
+export type User = {
+  id: number;
   email: string;
   firstName: string;
   lastName: string;
   createdAt: string;
   updatedAt: string;
+  role: Role;
+  avatar: string;
 };
 
 export const initialUser = {
-  id: '',
+  id: 0,
   email: '',
   firstName: '',
   lastName: '',
   createdAt: '',
   updatedAt: '',
+  role: Role.MEMBER,
+  avatar: '',
 };
 
 type AppContextValues = {
-  currentUser: User;
+  currentUser: User | null;
   setCurrentUser: Function;
   isLoading: boolean;
 };
 
 const AppContext = createContext<AppContextValues>({
-  currentUser: initialUser,
+  currentUser: null,
   setCurrentUser: () => {},
   isLoading: false,
 });

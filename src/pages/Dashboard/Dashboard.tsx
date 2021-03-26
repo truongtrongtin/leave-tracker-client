@@ -50,17 +50,26 @@ export default function Dashboard() {
     getAllLeaves();
   }, []);
 
-  const createLeave = async ({ startAt, endAt, reason }: NewLeaveInputs) => {
+  const createLeave = async ({
+    startAt,
+    endAt,
+    reason,
+    userId,
+  }: NewLeaveInputs) => {
     setIsLoading(true);
     try {
-      const newLeave = await fetchData(`/leaves/add`, {
-        method: 'POST',
-        body: new URLSearchParams({
-          startAt: startAt.toISOString(),
-          endAt: endAt.toISOString(),
-          reason,
-        }),
-      });
+      const newLeave = await fetchData(
+        userId ? '/leaves/admin.add' : '/leaves/add',
+        {
+          method: 'POST',
+          body: new URLSearchParams({
+            startAt: startAt.toISOString(),
+            endAt: endAt.toISOString(),
+            reason,
+            ...(userId && { userId }),
+          }),
+        },
+      );
       setIsLoading(false);
       setLeaves([newLeave, ...leaves]);
       onCloseCreate();
@@ -136,12 +145,10 @@ export default function Dashboard() {
     };
   });
 
-  console.log('mappedLeaves', mappedLeaves);
-
   return (
     <Box height="100%">
       <Center>
-        <Button mx="auto" colorScheme="green" onClick={onOpenCreate}>
+        <Button colorScheme="green" onClick={onOpenCreate}>
           Add Leave
         </Button>
       </Center>

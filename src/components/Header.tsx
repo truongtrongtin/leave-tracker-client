@@ -10,27 +10,33 @@ import {
   InputRightElement,
   Link,
   Spacer,
+  Text,
   useColorMode,
 } from '@chakra-ui/react';
-import AppContext from 'AppContext';
 import logo from 'assets/icons/react.svg';
+import AppContext from 'contexts/AppContext';
 import { useContext } from 'react';
 import { AiOutlineMenu, AiOutlineSearch } from 'react-icons/ai';
 import { BsBell, BsChat } from 'react-icons/bs';
 import { FaRegMoon, FaRegSun } from 'react-icons/fa';
+import { fetchData } from 'services/fetchData';
 import { Link as RouteLink, useLocation } from 'wouter';
 
 export default function Header() {
   const [, setLocation] = useLocation();
-  const { setCurrentUser } = useContext(AppContext);
+  const { currentUser, setCurrentUser } = useContext(AppContext);
   const { colorMode, toggleColorMode } = useColorMode();
 
   const logout = async () => {
-    await fetch('/auth/logout', {
-      method: 'POST',
-    });
-    setCurrentUser(null);
-    setLocation('/login');
+    try {
+      await fetchData('/auth/logout', {
+        method: 'POST',
+      });
+      setCurrentUser(null);
+      setLocation('/login');
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -67,6 +73,7 @@ export default function Header() {
         aria-label="Toggle sidebar"
         icon={colorMode === 'light' ? <FaRegMoon /> : <FaRegSun />}
       />
+      <Text>Welcome {currentUser?.firstName}</Text>
       <Spacer />
       <Box>
         <InputGroup>

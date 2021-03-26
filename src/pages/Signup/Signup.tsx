@@ -16,15 +16,15 @@ import {
   InputRightElement,
   SimpleGrid,
   Text,
-} from "@chakra-ui/react";
-import { yupResolver } from "@hookform/resolvers/yup";
-import AppLink from "components/AppLink";
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
-import { fetchData } from "services/fetchData";
-import { useLocation } from "wouter";
-import * as yup from "yup";
+} from '@chakra-ui/react';
+import { yupResolver } from '@hookform/resolvers/yup';
+import AppLink from 'components/AppLink';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+import { fetchData } from 'services/fetchData';
+import { useLocation } from 'wouter';
+import * as yup from 'yup';
 
 type SignupInputs = {
   email: string;
@@ -41,7 +41,7 @@ const loginSchema = yup.object().shape({
 });
 
 export default function Signup() {
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [, setLocation] = useLocation();
@@ -57,14 +57,14 @@ export default function Signup() {
   }: SignupInputs) => {
     setIsLoading(true);
     try {
-      await fetchData("/auth/signup", {
-        method: "POST",
+      await fetchData('/auth/signup', {
+        method: 'POST',
         body: new URLSearchParams({ email, password, firstName, lastName }),
       });
       setIsLoading(false);
       setShowPassword(false);
-      setError("");
-      setLocation("/login");
+      setError('');
+      setLocation('/login');
     } catch (error) {
       setError(error.message);
       setIsLoading(false);
@@ -125,7 +125,7 @@ export default function Signup() {
               <FormLabel htmlFor="password">Password</FormLabel>
               <InputGroup size="lg">
                 <Input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   ref={register}
                 />
@@ -155,14 +155,14 @@ export default function Signup() {
               {isLoading ? (
                 <CircularProgress isIndeterminate size="24px" color="teal" />
               ) : (
-                "Sign up"
+                'Sign up'
               )}
             </Button>
           </form>
         </Box>
         <Box textAlign="center">
           <Text>
-            Already have an account?{" "}
+            Already have an account?{' '}
             <AppLink color="teal.600" href="/login">
               Login here
             </AppLink>

@@ -1,8 +1,8 @@
-import { Ability, AbilityBuilder } from "@casl/ability";
-import { User } from "pages/Employee/Employee";
+import { Ability, AbilityBuilder } from '@casl/ability';
+import { User } from 'contexts/AppContext';
 
-type Actions = "create" | "read" | "update" | "delete";
-type Subjects = "User" | "Leave";
+type Actions = 'create' | 'read' | 'update' | 'delete';
+type Subjects = 'User' | 'Leave';
 type AppAbility = Ability<[Actions, Subjects]>;
 
 const ability = new Ability<[Actions, Subjects]>();
@@ -11,11 +11,11 @@ export function defineRulesFor(user: User) {
   const { can, rules } = new AbilityBuilder<AppAbility>(Ability);
 
   switch (user.role) {
-    case "ADMIN":
-      can("update", "Leave");
+    case 'ADMIN':
+      can('update', 'Leave');
       break;
-    case "MEMBER":
-      can("read", "Leave");
+    case 'MEMBER':
+      can('read', 'Leave');
       break;
     default:
       break;

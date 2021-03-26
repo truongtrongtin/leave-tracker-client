@@ -1,8 +1,8 @@
 import { Spinner } from '@chakra-ui/react';
-import AppContext, { initialUser } from 'AppContext';
 import { AbilityContext } from 'components/Can';
 import DashboardRoute from 'components/DashboardRoute';
 import ability, { defineRulesFor } from 'config/ability';
+import AppContext from 'contexts/AppContext';
 import Dashboard from 'pages/Dashboard';
 import Employee from 'pages/Employee';
 import Holiday from 'pages/Holidays';
@@ -15,7 +15,7 @@ import { Redirect, Route, Switch, useLocation } from 'wouter';
 
 function App() {
   const [, setLocation] = useLocation();
-  const [currentUser, setCurrentUser] = useState(initialUser);
+  const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true); // bootstrap app
 
   useEffect(() => {
