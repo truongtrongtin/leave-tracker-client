@@ -28,13 +28,7 @@ export default function Employee() {
     <SimpleGrid columns={[1, 1, 2, 3, 4]} spacing="40px">
       {users.map((user) => {
         const name = user.firstName + ' ' + user.lastName;
-        return (
-          <EmployeeItem
-            key={user.id.toString()}
-            name={name}
-            avatar={user.avatar}
-          />
-        );
+        return <EmployeeItem key={user.id} name={name} avatar={user.avatar} />;
       })}
     </SimpleGrid>
   );

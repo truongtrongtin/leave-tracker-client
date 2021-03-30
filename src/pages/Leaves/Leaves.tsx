@@ -13,17 +13,18 @@ import {
 } from '@chakra-ui/react';
 import { Can } from 'components/Can';
 import LDTable from 'components/LDTable/LDTable';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { BiDotsVerticalRounded } from 'react-icons/bi';
-import { fetchData } from 'services/fetchData';
 import { User } from 'contexts/AppContext';
+import React, { useMemo, useState } from 'react';
+import { BiDotsVerticalRounded } from 'react-icons/bi';
+import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { fetchData } from 'services/fetchData';
 import DeleteLeaveModal from './DeleteLeaveModal';
 import NewLeaveModal, { NewLeaveInputs } from './NewLeaveModal';
 
 export type Leave = {
   id: number;
-  startAt: Date;
-  endAt: Date;
+  startAt: string;
+  endAt: string;
   reason: string;
   status: string;
   user: User;
@@ -45,10 +46,9 @@ function calculateLeaveDays(leave: Leave) {
 }
 
 function Leaves() {
-  const [leaves, setLeaves] = useState<Leave[]>([]);
   const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
+  const queryClient = useQueryClient();
 
   const {
     isOpen: isOpenCreate,
@@ -68,109 +68,114 @@ function Leaves() {
     onClose: onCloseDelete,
   } = useDisclosure();
 
-  useEffect(() => {
-    const getAllLeaves = async () => {
-      try {
-        setIsLoading(true);
-        const leaves = await fetchData('/leaves');
-        setLeaves(leaves.items);
-        setIsLoading(false);
-      } catch (error) {
-        setIsLoading(false);
-      }
-    };
-    getAllLeaves();
-  }, []);
+  const getLeavesQuery = useQuery('leaves', () => fetchData('/leaves'), {
+    placeholderData: { items: [], meta: {}, links: {} },
+  });
 
-  const createLeave = async ({ startAt, endAt, reason }: NewLeaveInputs) => {
-    setIsLoading(true);
-    try {
-      const newLeave = await fetchData(`/leaves/add`, {
+  const createLeaveMutation = useMutation(
+    (newLeave: NewLeaveInputs) => {
+      const { startAt, endAt, reason, userId } = newLeave;
+      return fetchData(userId ? '/leaves/admin.add' : '/leaves/add', {
         method: 'POST',
         body: new URLSearchParams({
-          startAt: startAt.toISOString(),
-          endAt: endAt.toISOString(),
+          startAt,
+          endAt,
           reason,
+          ...(userId && { userId: userId }),
         }),
       });
-      setIsLoading(false);
-      setLeaves([newLeave, ...leaves]);
-      onCloseCreate();
-    } catch (error) {
-      setIsLoading(false);
-      onCloseCreate();
-    }
-  };
-
-  const updateLeave = async ({ startAt, endAt, reason }: NewLeaveInputs) => {
-    if (!selectedLeave) return;
-    try {
-      setIsLoading(true);
-      const newLeave = await fetchData(`/leaves/${selectedLeave.id}/edit`, {
-        method: 'POST',
-        body: new URLSearchParams({
-          startAt: startAt.toISOString(),
-          endAt: endAt.toISOString(),
-          reason,
-        }),
-      });
-      const newLeaves = leaves.map((leave) => {
-        if (leave.id === newLeave.id) return newLeave;
-        return leave;
-      });
-      setLeaves(newLeaves);
-      setIsLoading(false);
-      onCloseEdit();
-    } catch (error) {
-      toast({ description: error.message, status: 'error' });
-      setIsLoading(false);
-      onCloseEdit();
-    }
-  };
-
-  const changeLeaveStatus = useCallback(
-    async (leave: Leave, status: string) => {
-      if (leave.status === status) return;
-      try {
-        setIsLoading(true);
-        const newLeave = await fetchData(`/leaves/${leave.id}/edit`, {
-          method: 'POST',
-          body: new URLSearchParams({ status }),
-        });
-        const newLeaves = leaves.map((leave) => {
-          if (leave.id === newLeave.id) return newLeave;
-          return leave;
-        });
-        setLeaves(newLeaves);
-        setIsLoading(false);
-      } catch (error) {
-        toast({ description: error.message, status: 'error' });
-        setIsLoading(false);
-      }
     },
-    [leaves, toast],
+    {
+      onSuccess: (newLeave: Leave) => {
+        queryClient.setQueryData('leaves', (old: any) => {
+          return { ...old, items: [newLeave, ...old.items] };
+        });
+        setSelectedLeave(null);
+        onCloseCreate();
+      },
+      onError: (error: Error) => {
+        toast({ description: error.message, status: 'error' });
+      },
+    },
   );
 
-  const deleteLeave = useCallback(async () => {
-    if (!selectedLeave) return;
-    try {
-      setIsLoading(true);
-      await fetchData(`/leaves/${selectedLeave.id}/delete`, {
+  const updateLeaveMutation = useMutation(
+    (newLeave: NewLeaveInputs) =>
+      fetchData(`/leaves/${selectedLeave?.id}/edit`, {
         method: 'POST',
-      });
-      const newLeaves = leaves.filter((l) => l.id !== selectedLeave.id);
-      setIsLoading(false);
-      onCloseDelete();
-      setLeaves(newLeaves);
-    } catch (error) {
-      toast({ description: error.message, status: 'error' });
-      setIsLoading(false);
-    }
-  }, [leaves, selectedLeave, onCloseDelete, toast]);
+        body: new URLSearchParams({
+          startAt: newLeave.startAt,
+          endAt: newLeave.endAt,
+          reason: newLeave.reason,
+        }),
+      }),
+    {
+      onSuccess: (newLeave: Leave) => {
+        queryClient.setQueryData('leaves', (old: any) => {
+          const newLeaves = old.items.map((leave: Leave) => {
+            if (leave.id === newLeave.id) return newLeave;
+            return leave;
+          });
+          return { ...old, items: newLeaves };
+        });
+        setSelectedLeave(null);
+        onCloseEdit();
+      },
+      onError: (error: Error) => {
+        toast({ description: error.message, status: 'error' });
+      },
+    },
+  );
+
+  const deleteLeaveMutation = useMutation(
+    (leaveId: number) =>
+      fetchData(`/leaves/${leaveId}/delete`, {
+        method: 'POST',
+      }),
+    {
+      onSuccess: (_, leaveId) => {
+        queryClient.setQueryData('leaves', (old: any) => {
+          const newLeaves = old.items.filter(
+            (leave: Leave) => leave.id !== leaveId,
+          );
+          return { ...old, items: newLeaves };
+        });
+        setSelectedLeave(null);
+        onCloseDelete();
+        onCloseEdit();
+      },
+      onError: (error: Error) => {
+        toast({ description: error.message, status: 'error' });
+      },
+    },
+  );
+
+  // const changeLeaveStatus = useCallback(
+  //   async (leave: Leave, status: string) => {
+  //     if (leave.status === status) return;
+  //     try {
+  //       setIsLoading(true);
+  //       const newLeave = await fetchData(`/leaves/${leave.id}/edit`, {
+  //         method: 'POST',
+  //         body: new URLSearchParams({ status }),
+  //       });
+  //       const newLeaves = leaves.map((leave) => {
+  //         if (leave.id === newLeave.id) return newLeave;
+  //         return leave;
+  //       });
+  //       setLeaves(newLeaves);
+  //       setIsLoading(false);
+  //     } catch (error) {
+  //       toast({ description: error.message, status: 'error' });
+  //       setIsLoading(false);
+  //     }
+  //   },
+  //   [leaves, toast],
+  // );
 
   const data = useMemo(
     () =>
-      leaves.map((leave) => {
+      getLeavesQuery.data?.items.map((leave: Leave) => {
         return {
           employee: leave.user.firstName + ' ' + leave.user.lastName,
           startAt: new Date(leave.startAt).toLocaleString(undefined, {
@@ -194,7 +199,7 @@ function Leaves() {
               <Can I="update" a="Leave">
                 <Select
                   value={leave.status}
-                  onChange={(e) => changeLeaveStatus(leave, e.target.value)}
+                  // onChange={(e) => changeLeaveStatus(leave, e.target.value)}
                 >
                   {Object.values(LeaveStatus).map((status) => (
                     <option key={status} value={status}>
@@ -233,7 +238,7 @@ function Leaves() {
           ),
         };
       }),
-    [leaves, changeLeaveStatus, onOpenDelete, onOpenEdit],
+    [onOpenDelete, onOpenEdit, getLeavesQuery],
   );
 
   const columns = useMemo(
@@ -277,26 +282,27 @@ function Leaves() {
       <NewLeaveModal
         isOpen={isOpenCreate}
         onClose={onCloseCreate}
-        isLoading={isLoading}
-        onSubmit={createLeave}
-        onDelete={deleteLeave}
+        isSubmiting={createLeaveMutation.isLoading}
+        onSubmit={(newLeave) => createLeaveMutation.mutate(newLeave)}
       />
       {selectedLeave && (
         <NewLeaveModal
           leave={selectedLeave}
           isOpen={isOpenEdit}
           onClose={onCloseEdit}
-          isLoading={isLoading}
-          onSubmit={updateLeave}
-          onDelete={deleteLeave}
+          onDelete={() => deleteLeaveMutation.mutate(selectedLeave.id)}
+          isSubmiting={updateLeaveMutation.isLoading}
+          onSubmit={(newLeave) => updateLeaveMutation.mutate(newLeave)}
         />
       )}
-      <DeleteLeaveModal
-        isOpen={isOpenDelete}
-        onClose={onCloseDelete}
-        isLoading={isLoading}
-        onSubmit={deleteLeave}
-      />
+      {selectedLeave && (
+        <DeleteLeaveModal
+          isOpen={isOpenDelete}
+          onClose={onCloseDelete}
+          isLoading={deleteLeaveMutation.isLoading}
+          onSubmit={() => deleteLeaveMutation.mutate(selectedLeave.id)}
+        />
+      )}
     </Box>
   );
 }

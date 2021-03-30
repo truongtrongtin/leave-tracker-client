@@ -17,7 +17,7 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
-import AppContext from 'contexts/AppContext';
+import { AppContext } from 'contexts/AppContext';
 import AppLink from 'components/AppLink';
 import ability, { defineRulesFor } from 'config/ability';
 import React, { useContext, useState } from 'react';
@@ -136,7 +136,7 @@ export default function Login() {
         <Box textAlign="center">
           <Text>
             Not a member?{' '}
-            <AppLink color="teal.600" href="/signup">
+            <AppLink color="teal" href="/signup">
               Signup now
             </AppLink>
           </Text>

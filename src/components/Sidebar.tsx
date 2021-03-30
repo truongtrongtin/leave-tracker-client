@@ -1,31 +1,32 @@
-import { Flex, Icon, Text } from "@chakra-ui/react";
-import React from "react";
-import { FaRegCalendarTimes } from "react-icons/fa";
-import { BiUser } from "react-icons/bi";
-import AppLink from "./AppLink";
+import { Flex, Icon, Text } from '@chakra-ui/react';
+import React from 'react';
+import { FaRegCalendarTimes } from 'react-icons/fa';
+import { BiUser } from 'react-icons/bi';
+import AppLink from './AppLink';
 
 const sidebarItems = [
   {
     icon: FaRegCalendarTimes,
-    name: "Dashboard",
-    href: "/dashboard",
+    name: 'Dashboard',
+    href: '/dashboard',
   },
   {
     icon: FaRegCalendarTimes,
-    name: "My Leaves",
-    href: "/leaves",
+    name: 'My Leaves',
+    href: '/leaves',
   },
   {
     icon: BiUser,
-    name: "Employees",
-    href: "/employees",
+    name: 'Employees',
+    href: '/employees',
   },
   {
     icon: BiUser,
-    name: "Holidays",
-    href: "/holidays",
+    name: 'Holidays',
+    href: '/holidays',
   },
 ];
+console.log('This is from sidebar');
 
 export default function Sidebar() {
   return (
@@ -41,13 +42,13 @@ export default function Sidebar() {
         <AppLink
           key={index}
           href={item.href}
-          activeStyle={{ backgroundColor: "orange.400" }}
-          _hover={{ textDecoration: "none" }}
+          activeStyle={{ backgroundColor: 'orange.400' }}
+          _hover={{ textDecoration: 'none' }}
         >
           <Flex
             padding={3}
             alignItems="center"
-            _hover={{ background: "orange.400", textDecoration: "none" }}
+            _hover={{ background: 'orange.400', textDecoration: 'none' }}
           >
             <Icon as={item.icon} />
             <Text marginLeft={4}>{item.name}</Text>

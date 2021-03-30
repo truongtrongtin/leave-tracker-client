@@ -1,9 +1,9 @@
-import { Table, Tbody, Td, Th, Thead, Tr } from "@chakra-ui/react";
-import React from "react";
-import { Column, useTable } from "react-table";
+import { Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
+import React from 'react';
+import { Column, useTable } from 'react-table';
 
 type LDTableProps<D extends object = {}> = {
-  data: D[];
+  data: any;
   columns: Column<D>[];
 };
 
@@ -22,7 +22,7 @@ function LDTable({ data, columns }: LDTableProps) {
         {headerGroups.map((headerGroup) => (
           <Tr {...headerGroup.getHeaderGroupProps()}>
             {headerGroup.headers.map((column) => (
-              <Th {...column.getHeaderProps()}>{column.render("Header")}</Th>
+              <Th {...column.getHeaderProps()}>{column.render('Header')}</Th>
             ))}
           </Tr>
         ))}
@@ -33,7 +33,7 @@ function LDTable({ data, columns }: LDTableProps) {
           return (
             <Tr {...row.getRowProps()}>
               {row.cells.map((cell) => (
-                <Td {...cell.getCellProps()}>{cell.render("Cell")}</Td>
+                <Td {...cell.getCellProps()}>{cell.render('Cell')}</Td>
               ))}
             </Tr>
           );

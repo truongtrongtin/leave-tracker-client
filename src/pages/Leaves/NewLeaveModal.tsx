@@ -18,7 +18,7 @@ import {
   Textarea,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
-import AppContext, { Role, User } from 'contexts/AppContext';
+import { AppContext, Role, User } from 'contexts/AppContext';
 import { useContext, useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -31,10 +31,11 @@ import { Leave } from './Leaves';
 type NewLeaveProps = {
   leave?: Leave;
   isOpen: boolean;
-  isLoading: boolean;
+  isSubmiting: boolean;
+  isDeleting?: boolean;
   onClose: () => void;
-  onSubmit: (values: NewLeaveInputs) => void;
-  onDelete: () => void;
+  onSubmit: (newLeave: NewLeaveInputs) => void;
+  onDelete?: () => void;
 };
 
 export enum DayPart {
@@ -44,8 +45,8 @@ export enum DayPart {
 }
 
 export type NewLeaveInputs = {
-  startAt: Date;
-  endAt: Date;
+  startAt: string;
+  endAt: string;
   reason: string;
   userId?: string;
 };
@@ -93,7 +94,8 @@ const getInitialDayPart = (leave: Leave) => {
 function NewLeaveModal({
   leave,
   isOpen,
-  isLoading,
+  isSubmiting,
+  isDeleting,
   onClose,
   onSubmit,
   onDelete,
@@ -112,8 +114,6 @@ function NewLeaveModal({
 
   const isEditing = Boolean(leave);
   const isAdmin = currentUser?.role === Role.ADMIN;
-  const isCurrentUser = currentUser?.id === leave?.user.id;
-  const isReadOnly = !isAdmin && !isCurrentUser;
 
   const handleSubmitLogic = ({
     leaveDate,
@@ -135,7 +135,12 @@ function NewLeaveModal({
       startAt.setHours(9, 0, 0, 0);
       endAt.setHours(18, 0, 0, 0);
     }
-    onSubmit({ startAt, endAt, reason, userId });
+    onSubmit({
+      startAt: startAt.toISOString(),
+      endAt: endAt.toISOString(),
+      reason,
+      userId,
+    });
   };
 
   useEffect(() => {
@@ -192,7 +197,6 @@ function NewLeaveModal({
                 }
                 render={({ onChange, value }) => (
                   <DatePicker
-                    readOnly={isReadOnly}
                     selected={value}
                     onChange={onChange}
                     dateFormat="E MMM d, yyyy"
@@ -217,25 +221,13 @@ function NewLeaveModal({
                 render={({ onChange, value }) => (
                   <RadioGroup value={value} onChange={onChange}>
                     <HStack>
-                      <Radio
-                        isReadOnly={isReadOnly}
-                        id={DayPart.ALL}
-                        value={DayPart.ALL}
-                      >
+                      <Radio id={DayPart.ALL} value={DayPart.ALL}>
                         All day
                       </Radio>
-                      <Radio
-                        isReadOnly={isReadOnly}
-                        id={DayPart.MORNING}
-                        value={DayPart.MORNING}
-                      >
+                      <Radio id={DayPart.MORNING} value={DayPart.MORNING}>
                         Only morning
                       </Radio>
-                      <Radio
-                        isReadOnly={isReadOnly}
-                        id={DayPart.AFTERNOON}
-                        value={DayPart.AFTERNOON}
-                      >
+                      <Radio id={DayPart.AFTERNOON} value={DayPart.AFTERNOON}>
                         Only afternoon
                       </Radio>
                     </HStack>
@@ -246,7 +238,6 @@ function NewLeaveModal({
             <FormControl isRequired isInvalid={Boolean(errors.reason)} mt={4}>
               <FormLabel htmlFor="reason">Reason</FormLabel>
               <Textarea
-                isReadOnly={isReadOnly}
                 defaultValue={leave ? leave.reason : ''}
                 ref={register}
                 name="reason"
@@ -255,20 +246,25 @@ function NewLeaveModal({
             </FormControl>
           </ModalBody>
           <ModalFooter>
-            {!isReadOnly && isEditing && (
-              <Button colorScheme="red" mr={3} onClick={onDelete}>
+            {isEditing && (
+              <Button
+                colorScheme="red"
+                mr={3}
+                onClick={onDelete}
+                isLoading={isDeleting}
+              >
                 Delete
               </Button>
             )}
             <Spacer />
-            <Button mr={3} onClick={onClose}>
+            <Button variant="outline" mr={3} onClick={onClose}>
               Close
             </Button>
-            {!isReadOnly && (
-              <Button colorScheme="blue" type="submit" isLoading={isLoading}>
+            {
+              <Button colorScheme="blue" type="submit" isLoading={isSubmiting}>
                 Submit
               </Button>
-            )}
+            }
           </ModalFooter>
         </form>
       </ModalContent>

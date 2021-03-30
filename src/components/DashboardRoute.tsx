@@ -1,5 +1,5 @@
 import { Box, Flex } from '@chakra-ui/react';
-import AppContext from 'contexts/AppContext';
+import { AppContext } from 'contexts/AppContext';
 import React, { useContext } from 'react';
 import { Redirect, Route } from 'wouter';
 import Header from './Header';
@@ -15,8 +15,6 @@ export default function DashboardRoute({
   children,
 }: DashboardRouteProps) {
   const { currentUser, isLoading } = useContext(AppContext);
-  console.log('currentUser', currentUser);
-  console.log('isLoading', isLoading);
 
   if (!currentUser && !isLoading) return <Redirect to="/login" />;
   return (

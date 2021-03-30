@@ -1,22 +1,21 @@
-import { Spinner } from '@chakra-ui/react';
+import { Spinner } from '@chakra-ui/spinner';
 import { AbilityContext } from 'components/Can';
 import DashboardRoute from 'components/DashboardRoute';
 import ability, { defineRulesFor } from 'config/ability';
-import AppContext from 'contexts/AppContext';
+import { AppContext } from 'contexts/AppContext';
 import Dashboard from 'pages/Dashboard';
 import Employee from 'pages/Employee';
 import Holiday from 'pages/Holidays';
 import Leaves from 'pages/Leaves';
 import Login from 'pages/Login';
 import Signup from 'pages/Signup';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect } from 'react';
 import { fetchData } from 'services/fetchData';
 import { Redirect, Route, Switch, useLocation } from 'wouter';
 
 function App() {
   const [, setLocation] = useLocation();
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true); // bootstrap app
+  const { setCurrentUser, isLoading, setIsLoading } = useContext(AppContext);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -30,7 +29,7 @@ function App() {
       }
     };
     checkAuth();
-  }, [setLocation]);
+  }, [setLocation, setCurrentUser, setIsLoading]);
 
   if (isLoading) {
     return (
@@ -44,34 +43,32 @@ function App() {
   }
 
   return (
-    <AppContext.Provider value={{ currentUser, setCurrentUser, isLoading }}>
-      <AbilityContext.Provider value={ability}>
-        <Switch>
-          <Route path="/login">
-            <Login />
-          </Route>
-          <Route path="/signup">
-            <Signup />
-          </Route>
-          <Route path="/">
-            <Redirect to="/dashboard" />
-          </Route>
-          <DashboardRoute path="/dashboard">
-            <Dashboard />
-          </DashboardRoute>
-          <DashboardRoute path="/leaves">
-            <Leaves />
-          </DashboardRoute>
-          <DashboardRoute path="/employees">
-            <Employee />
-          </DashboardRoute>
-          <DashboardRoute path="/holidays">
-            <Holiday />
-          </DashboardRoute>
-          <Route>Not Found!</Route>
-        </Switch>
-      </AbilityContext.Provider>
-    </AppContext.Provider>
+    <AbilityContext.Provider value={ability}>
+      <Switch>
+        <Route path="/login">
+          <Login />
+        </Route>
+        <Route path="/signup">
+          <Signup />
+        </Route>
+        <Route path="/">
+          <Redirect to="/dashboard" />
+        </Route>
+        <DashboardRoute path="/dashboard">
+          <Dashboard />
+        </DashboardRoute>
+        <DashboardRoute path="/leaves">
+          <Leaves />
+        </DashboardRoute>
+        <DashboardRoute path="/employees">
+          <Employee />
+        </DashboardRoute>
+        <DashboardRoute path="/holidays">
+          <Holiday />
+        </DashboardRoute>
+        <Route>Not Found!</Route>
+      </Switch>
+    </AbilityContext.Provider>
   );
 }
 

@@ -14,8 +14,8 @@ import {
   useColorMode,
 } from '@chakra-ui/react';
 import logo from 'assets/icons/react.svg';
-import AppContext from 'contexts/AppContext';
-import { useContext } from 'react';
+import { AppContext } from 'contexts/AppContext';
+import React, { useContext } from 'react';
 import { AiOutlineMenu, AiOutlineSearch } from 'react-icons/ai';
 import { BsBell, BsChat } from 'react-icons/bs';
 import { FaRegMoon, FaRegSun } from 'react-icons/fa';
@@ -38,6 +38,8 @@ export default function Header() {
       console.log(error);
     }
   };
+
+  console.log('This is from Header');
 
   return (
     <Flex
