@@ -144,7 +144,7 @@ function NewLeaveModal({
   };
 
   useEffect(() => {
-    if (users.length) return;
+    if (users.length || !isOpen) return;
     const getAllUsers = async () => {
       try {
         const users = await fetchData('/users');
@@ -153,7 +153,7 @@ function NewLeaveModal({
       } catch (error) {}
     };
     getAllUsers();
-  }, [setValue, users, leave]);
+  }, [setValue, users, leave, isOpen]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>

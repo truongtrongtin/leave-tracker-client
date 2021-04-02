@@ -5,7 +5,7 @@ import ability, { defineRulesFor } from 'config/ability';
 import { AppContext } from 'contexts/AppContext';
 import Dashboard from 'pages/Dashboard';
 import Employee from 'pages/Employee';
-import Holiday from 'pages/Holidays';
+import Holiday from 'pages/Statistics';
 import Leaves from 'pages/Leaves';
 import Login from 'pages/Login';
 import Signup from 'pages/Signup';
@@ -63,7 +63,7 @@ function App() {
         <DashboardRoute path="/employees">
           <Employee />
         </DashboardRoute>
-        <DashboardRoute path="/holidays">
+        <DashboardRoute path="/statistics">
           <Holiday />
         </DashboardRoute>
         <Route>Not Found!</Route>

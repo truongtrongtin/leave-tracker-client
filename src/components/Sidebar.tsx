@@ -22,8 +22,8 @@ const sidebarItems = [
   },
   {
     icon: BiUser,
-    name: 'Holidays',
-    href: '/holidays',
+    name: 'Statistic',
+    href: '/statistics',
   },
 ];
 console.log('This is from sidebar');
