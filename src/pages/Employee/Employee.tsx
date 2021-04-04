@@ -1,5 +1,5 @@
 import { SimpleGrid } from '@chakra-ui/react';
-import { User } from 'contexts/AppContext';
+import { User } from 'types/user';
 import EmployeeItem from 'components/EmployeeItem';
 import { useEffect, useState } from 'react';
 import { fetchData } from 'services/fetchData';

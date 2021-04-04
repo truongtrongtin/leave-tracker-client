@@ -11,8 +11,8 @@ export default function Statistic() {
   return (
     <div>
       {getUsersLeavesCountQuery.data?.map((user: any) => (
-        <span>
-          {user.email} ----- {user.sum} day(s)
+        <span key={user.id}>
+          {user.first_name} {user.last_name} ----- {user.sum} day(s)
           <br />
         </span>
       ))}

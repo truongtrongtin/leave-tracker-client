@@ -1,6 +1,5 @@
-import { Link } from "@chakra-ui/react";
-import React from "react";
-import { Link as RouteLink, useRoute } from "wouter";
+import { Link } from '@chakra-ui/react';
+import { Link as RouteLink, useRoute } from 'wouter';
 
 // type AppLinkProps = {
 //   href: string;

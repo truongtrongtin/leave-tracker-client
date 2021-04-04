@@ -17,13 +17,14 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { AppContext } from 'contexts/AppContext';
 import AppLink from 'components/AppLink';
 import ability, { defineRulesFor } from 'config/ability';
-import React, { useContext, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+import { useQueryClient } from 'react-query';
 import { fetchData } from 'services/fetchData';
+import { User } from 'types/user';
 import { Redirect, useLocation } from 'wouter';
 import * as yup from 'yup';
 
@@ -38,12 +39,17 @@ const loginSchema = yup.object().shape({
 });
 
 export default function Login() {
-  const { currentUser, setCurrentUser } = useContext(AppContext);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [, setLocation] = useLocation();
-  const { register, handleSubmit, errors } = useForm({
+  const queryClient = useQueryClient();
+  const currentUser: User | undefined = queryClient.getQueryData('currentUser');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
     resolver: yupResolver(loginSchema),
   });
 
@@ -55,7 +61,7 @@ export default function Login() {
         body: new URLSearchParams({ email, password }),
       });
       const user = await fetchData('/auth/me');
-      setCurrentUser(user);
+      queryClient.setQueryData('currentUser', user);
       ability.update(defineRulesFor(user));
       setIsLoading(false);
       setShowPassword(false);
@@ -85,13 +91,7 @@ export default function Login() {
             )}
             <FormControl isRequired isInvalid={Boolean(errors.email)}>
               <FormLabel htmlFor="email">Email</FormLabel>
-              <Input
-                autoFocus
-                type="email"
-                name="email"
-                ref={register}
-                size="lg"
-              />
+              <Input autoFocus type="email" {...register('email')} size="lg" />
               <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
             </FormControl>
             <FormControl isRequired isInvalid={Boolean(errors.password)} mt={6}>
@@ -99,8 +99,7 @@ export default function Login() {
               <InputGroup size="lg">
                 <Input
                   type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  ref={register}
+                  {...register('password')}
                 />
                 <InputRightElement>
                   <IconButton

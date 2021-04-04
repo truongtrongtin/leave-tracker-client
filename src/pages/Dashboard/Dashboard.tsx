@@ -1,13 +1,20 @@
-import { Box, Button, Center, useDisclosure, useToast } from '@chakra-ui/react';
-import { AppContext } from 'contexts/AppContext';
+import {
+  Box,
+  Button,
+  Center,
+  Modal,
+  useDisclosure,
+  useToast,
+} from '@chakra-ui/react';
 import { format, getDay, parse, startOfWeek } from 'date-fns';
 import { Leave } from 'pages/Leaves/Leaves';
-import NewLeaveModal, { NewLeaveInputs } from 'pages/Leaves/NewLeaveModal';
-import { useContext, useState } from 'react';
+import NewLeave, { NewLeaveInputs } from 'pages/Leaves/NewLeave';
+import { useState } from 'react';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { fetchData } from 'services/fetchData';
+import { User } from 'types/user';
 
 const locales = {
   'en-US': require('date-fns/locale/en-US'),
@@ -20,10 +27,23 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+type LeaveResponse = {
+  items: Leave[];
+  meta: object;
+  links: object;
+};
+
+type LeaveEvent = {
+  id: string;
+  start: Date;
+  end: Date;
+  title: string;
+};
+
 export default function Dashboard() {
   const toast = useToast();
   const queryClient = useQueryClient();
-  const { currentUser } = useContext(AppContext);
+  const currentUser: User | undefined = queryClient.getQueryData('currentUser');
   const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
 
   const {
@@ -38,9 +58,9 @@ export default function Dashboard() {
     onClose: onCloseEdit,
   } = useDisclosure();
 
-  const getLeavesQuery = useQuery('leaves', () => fetchData('/leaves'), {
-    placeholderData: { items: [], meta: {}, links: {} },
-  });
+  const getLeavesQuery = useQuery<LeaveResponse>('leaves', () =>
+    fetchData('/leaves'),
+  );
 
   const createLeaveMutation = useMutation(
     (newLeave: NewLeaveInputs) => {
@@ -60,7 +80,6 @@ export default function Dashboard() {
         queryClient.setQueryData('leaves', (old: any) => {
           return { ...old, items: [newLeave, ...old.items] };
         });
-        setSelectedLeave(null);
         onCloseCreate();
       },
       onError: (error: Error) => {
@@ -88,8 +107,7 @@ export default function Dashboard() {
           });
           return { ...old, items: newLeaves };
         });
-        setSelectedLeave(null);
-        onCloseEdit();
+        handleLeaveUnselect();
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
@@ -98,7 +116,7 @@ export default function Dashboard() {
   );
 
   const deleteLeaveMutation = useMutation(
-    (leaveId: number) =>
+    (leaveId: string) =>
       fetchData(`/leaves/${leaveId}/delete`, {
         method: 'POST',
       }),
@@ -110,8 +128,7 @@ export default function Dashboard() {
           );
           return { ...old, items: newLeaves };
         });
-        setSelectedLeave(null);
-        onCloseEdit();
+        handleLeaveUnselect();
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
@@ -119,31 +136,52 @@ export default function Dashboard() {
     },
   );
 
-  const handleLeaveSelect = (leave: Leave) => {
+  const getLeavesById = (leaveId: string): Leave => {
+    const leaveData: LeaveResponse | undefined = queryClient.getQueryData(
+      'leaves',
+    );
+    if (!leaveData) throw Error('no leaves found');
+    const leave = leaveData.items.find((leave: Leave) => leave.id === leaveId);
+    if (!leave) throw Error(`can not find leave ${leaveId}`);
+    return leave;
+  };
+
+  const handleLeaveUnselect = () => {
+    setSelectedLeave(null);
+    onCloseEdit();
+  };
+
+  const handleLeaveSelect = (leaveEvent: LeaveEvent) => {
+    const leave = getLeavesById(leaveEvent.id);
     setSelectedLeave(leave);
     onOpenEdit();
   };
 
-  const generateDayPart = (leave: Leave) => {
-    const startAtHour = new Date(leave.startAt).getHours();
-    const endAtHour = new Date(leave.endAt).getHours();
+  const generateDayPart = (leave: Leave): string => {
+    const diffInHour =
+      Math.abs(
+        new Date(leave.startAt).getTime() - new Date(leave.endAt).getTime(),
+      ) / 3600000;
 
-    if (startAtHour === 9 && endAtHour === 14) return 'morning';
-    if (startAtHour === 14 && endAtHour === 18) return 'afternoon';
-    if (startAtHour === 9 && endAtHour === 18) return 'all day';
+    if (diffInHour === 5) return 'morning';
+    if (diffInHour === 4) return 'afternoon';
+    if (diffInHour === 9) return 'all day';
+    return 'unknown';
   };
 
-  const mappedLeaves = getLeavesQuery.data?.items.map((leave: Leave) => {
-    return {
-      ...leave,
-      start: new Date(leave.startAt),
-      end: new Date(leave.endAt),
-      title: `${leave.user.firstName} off ${generateDayPart(leave)}`,
-    };
-  });
+  const leaveEvents: LeaveEvent[] =
+    getLeavesQuery.data?.items.map((leave: Leave) => {
+      return {
+        id: leave.id,
+        start: new Date(leave.startAt),
+        end: new Date(leave.endAt),
+        title: `${leave.user.firstName} off ${generateDayPart(leave)}`,
+      };
+    }) || [];
 
-  const customEventStyle = (leave: Leave) => {
-    if (leave.user.id === currentUser?.id) {
+  const customEventStyle = (leaveEvent: LeaveEvent) => {
+    const leave = getLeavesById(leaveEvent.id);
+    if (leave?.user.id === currentUser?.id) {
       return {
         style: {
           backgroundColor: 'green',
@@ -163,28 +201,31 @@ export default function Dashboard() {
       <Box height="calc(100% - 40px)">
         <Calendar
           popup
+          views={['month']}
           eventPropGetter={customEventStyle}
           localizer={localizer}
-          events={mappedLeaves}
+          events={leaveEvents}
           onSelectEvent={handleLeaveSelect}
         />
       </Box>
-      <NewLeaveModal
-        isOpen={isOpenCreate}
-        onClose={onCloseCreate}
-        isSubmiting={createLeaveMutation.isLoading}
-        onSubmit={(newLeave) => createLeaveMutation.mutate(newLeave)}
-      />
-      {selectedLeave && (
-        <NewLeaveModal
-          leave={selectedLeave}
-          isOpen={isOpenEdit}
-          onClose={onCloseEdit}
-          onDelete={() => deleteLeaveMutation.mutate(selectedLeave.id)}
-          isSubmiting={updateLeaveMutation.isLoading}
-          isDeleting={deleteLeaveMutation.isLoading}
-          onSubmit={(newLeave) => updateLeaveMutation.mutate(newLeave)}
+      <Modal isOpen={isOpenCreate} onClose={onCloseCreate}>
+        <NewLeave
+          onClose={onCloseCreate}
+          isSubmiting={createLeaveMutation.isLoading}
+          onSubmit={(newLeave) => createLeaveMutation.mutate(newLeave)}
         />
+      </Modal>
+      {selectedLeave && (
+        <Modal isOpen={isOpenEdit} onClose={onCloseEdit}>
+          <NewLeave
+            leave={selectedLeave}
+            onClose={handleLeaveUnselect}
+            onDelete={() => deleteLeaveMutation.mutate(selectedLeave.id)}
+            isSubmiting={updateLeaveMutation.isLoading}
+            isDeleting={deleteLeaveMutation.isLoading}
+            onSubmit={(newLeave) => updateLeaveMutation.mutate(newLeave)}
+          />
+        </Modal>
       )}
     </Box>
   );

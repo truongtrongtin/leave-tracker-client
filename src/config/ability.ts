@@ -1,5 +1,5 @@
 import { Ability, AbilityBuilder } from '@casl/ability';
-import { User } from 'contexts/AppContext';
+import { User } from 'types/user';
 
 type Actions = 'create' | 'read' | 'update' | 'delete';
 type Subjects = 'User' | 'Leave';

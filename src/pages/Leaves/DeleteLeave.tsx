@@ -1,6 +1,5 @@
 import {
   Button,
-  Modal,
   ModalBody,
   ModalCloseButton,
   ModalContent,
@@ -10,20 +9,14 @@ import {
 } from '@chakra-ui/react';
 
 type DeleteLeaveProps = {
-  isOpen: boolean;
   onClose: () => void;
   isLoading: boolean;
   onSubmit: () => void;
 };
 
-function DeleteLeaveModal({
-  isOpen,
-  onClose,
-  isLoading,
-  onSubmit,
-}: DeleteLeaveProps) {
+function DeleteLeave({ onClose, isLoading, onSubmit }: DeleteLeaveProps) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>Delete Leave</ModalHeader>
@@ -43,8 +36,8 @@ function DeleteLeaveModal({
           </Button>
         </ModalFooter>
       </ModalContent>
-    </Modal>
+    </>
   );
 }
 
-export default DeleteLeaveModal;
+export default DeleteLeave;

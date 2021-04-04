@@ -6,23 +6,21 @@ import {
   MenuButton,
   MenuItem,
   MenuList,
-  Select,
-  Text,
+  Modal,
   useDisclosure,
   useToast,
 } from '@chakra-ui/react';
-import { Can } from 'components/Can';
 import LDTable from 'components/LDTable/LDTable';
-import { User } from 'contexts/AppContext';
-import React, { useMemo, useState } from 'react';
+import { User } from 'types/user';
+import { useMemo, useState } from 'react';
 import { BiDotsVerticalRounded } from 'react-icons/bi';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { fetchData } from 'services/fetchData';
-import DeleteLeaveModal from './DeleteLeaveModal';
-import NewLeaveModal, { NewLeaveInputs } from './NewLeaveModal';
+import DeleteLeave from './DeleteLeave';
+import NewLeave, { NewLeaveInputs } from './NewLeave';
 
 export type Leave = {
-  id: number;
+  id: string;
   startAt: string;
   endAt: string;
   reason: string;
@@ -30,19 +28,12 @@ export type Leave = {
   user: User;
 };
 
-enum LeaveStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  DECLINED = 'DECLINED',
-}
-
-function calculateLeaveDays(leave: Leave) {
-  const startAtHour = new Date(leave.startAt).getHours();
-  const endAtour = new Date(leave.endAt).getHours();
-
-  if (startAtHour === 9 && endAtour === 14) return 0.5;
-  if (startAtHour === 14 && endAtour === 18) return 0.5;
-  if (startAtHour === 9 && endAtour === 18) return 1;
+function calculateLeaveDays(leave: Leave): number {
+  const diffInHour =
+    Math.abs(
+      new Date(leave.startAt).getTime() - new Date(leave.endAt).getTime(),
+    ) / 3600000;
+  return diffInHour === 9 ? 1 : 0.5;
 }
 
 function Leaves() {
@@ -68,9 +59,15 @@ function Leaves() {
     onClose: onCloseDelete,
   } = useDisclosure();
 
-  const getLeavesQuery = useQuery('leaves', () => fetchData('/leaves'), {
-    placeholderData: { items: [], meta: {}, links: {} },
-  });
+  const currentUser: User | undefined = queryClient.getQueryData('currentUser');
+
+  const getLeavesQuery = useQuery(
+    'myLeaves',
+    () => fetchData(`/leaves?userId=${currentUser?.id}`),
+    {
+      placeholderData: { items: [], meta: {}, links: {} },
+    },
+  );
 
   const createLeaveMutation = useMutation(
     (newLeave: NewLeaveInputs) => {
@@ -87,7 +84,7 @@ function Leaves() {
     },
     {
       onSuccess: (newLeave: Leave) => {
-        queryClient.setQueryData('leaves', (old: any) => {
+        queryClient.setQueryData('myLeaves', (old: any) => {
           return { ...old, items: [newLeave, ...old.items] };
         });
         setSelectedLeave(null);
@@ -111,7 +108,7 @@ function Leaves() {
       }),
     {
       onSuccess: (newLeave: Leave) => {
-        queryClient.setQueryData('leaves', (old: any) => {
+        queryClient.setQueryData('myLeaves', (old: any) => {
           const newLeaves = old.items.map((leave: Leave) => {
             if (leave.id === newLeave.id) return newLeave;
             return leave;
@@ -128,13 +125,13 @@ function Leaves() {
   );
 
   const deleteLeaveMutation = useMutation(
-    (leaveId: number) =>
+    (leaveId: string) =>
       fetchData(`/leaves/${leaveId}/delete`, {
         method: 'POST',
       }),
     {
       onSuccess: (_, leaveId) => {
-        queryClient.setQueryData('leaves', (old: any) => {
+        queryClient.setQueryData('myLeaves', (old: any) => {
           const newLeaves = old.items.filter(
             (leave: Leave) => leave.id !== leaveId,
           );
@@ -179,6 +176,7 @@ function Leaves() {
         return {
           employee: leave.user.firstName + ' ' + leave.user.lastName,
           startAt: new Date(leave.startAt).toLocaleString(undefined, {
+            hourCycle: 'h23',
             weekday: 'short',
             month: 'short',
             day: 'numeric',
@@ -186,6 +184,7 @@ function Leaves() {
             minute: 'numeric',
           }),
           endAt: new Date(leave.endAt).toLocaleString(undefined, {
+            hourCycle: 'h23',
             weekday: 'short',
             month: 'short',
             day: 'numeric',
@@ -194,27 +193,8 @@ function Leaves() {
           }),
           noOfDays: calculateLeaveDays(leave),
           reason: leave.reason,
-          status: (
-            <>
-              <Can I="update" a="Leave">
-                <Select
-                  value={leave.status}
-                  // onChange={(e) => changeLeaveStatus(leave, e.target.value)}
-                >
-                  {Object.values(LeaveStatus).map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </Select>
-              </Can>
-              <Can I="read" a="Leave">
-                <Text>{leave.status}</Text>
-              </Can>
-            </>
-          ),
           action: (
-            <Menu>
+            <Menu isLazy>
               <MenuButton as={IconButton} icon={<BiDotsVerticalRounded />} />
               <MenuList>
                 <MenuItem
@@ -264,10 +244,6 @@ function Leaves() {
         accessor: 'reason',
       },
       {
-        Header: 'Status',
-        accessor: 'status',
-      },
-      {
         Header: 'Action',
         accessor: 'action',
       },
@@ -279,29 +255,33 @@ function Leaves() {
     <Box>
       <Button onClick={onOpenCreate}>Add Leave</Button>
       <LDTable data={data} columns={columns} />
-      <NewLeaveModal
-        isOpen={isOpenCreate}
-        onClose={onCloseCreate}
-        isSubmiting={createLeaveMutation.isLoading}
-        onSubmit={(newLeave) => createLeaveMutation.mutate(newLeave)}
-      />
-      {selectedLeave && (
-        <NewLeaveModal
-          leave={selectedLeave}
-          isOpen={isOpenEdit}
-          onClose={onCloseEdit}
-          onDelete={() => deleteLeaveMutation.mutate(selectedLeave.id)}
-          isSubmiting={updateLeaveMutation.isLoading}
-          onSubmit={(newLeave) => updateLeaveMutation.mutate(newLeave)}
+      <Modal isOpen={isOpenCreate} onClose={onCloseCreate}>
+        <NewLeave
+          onClose={onCloseCreate}
+          isSubmiting={createLeaveMutation.isLoading}
+          onSubmit={(newLeave) => createLeaveMutation.mutate(newLeave)}
         />
+      </Modal>
+
+      {selectedLeave && (
+        <Modal isOpen={isOpenEdit} onClose={onCloseEdit}>
+          <NewLeave
+            leave={selectedLeave}
+            onClose={onCloseEdit}
+            onDelete={() => deleteLeaveMutation.mutate(selectedLeave.id)}
+            isSubmiting={updateLeaveMutation.isLoading}
+            onSubmit={(newLeave) => updateLeaveMutation.mutate(newLeave)}
+          />
+        </Modal>
       )}
       {selectedLeave && (
-        <DeleteLeaveModal
-          isOpen={isOpenDelete}
-          onClose={onCloseDelete}
-          isLoading={deleteLeaveMutation.isLoading}
-          onSubmit={() => deleteLeaveMutation.mutate(selectedLeave.id)}
-        />
+        <Modal isOpen={isOpenDelete} onClose={onCloseDelete}>
+          <DeleteLeave
+            onClose={onCloseDelete}
+            isLoading={deleteLeaveMutation.isLoading}
+            onSubmit={() => deleteLeaveMutation.mutate(selectedLeave.id)}
+          />
+        </Modal>
       )}
     </Box>
   );

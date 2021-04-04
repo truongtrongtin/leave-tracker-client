@@ -1,6 +1,5 @@
-import React from "react";
-import { useColorMode, Box, IconButton } from "@chakra-ui/react";
-import { FaMoon, FaRegSun } from "react-icons/fa";
+import { useColorMode, Box, IconButton } from '@chakra-ui/react';
+import { FaMoon, FaRegSun } from 'react-icons/fa';
 
 export default function ThemeToggler() {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -10,7 +9,7 @@ export default function ThemeToggler() {
       <IconButton
         aria-label="darkmode-toggler"
         size="lg"
-        icon={colorMode === "light" ? <FaMoon /> : <FaRegSun />}
+        icon={colorMode === 'light' ? <FaMoon /> : <FaRegSun />}
         onClick={toggleColorMode}
         variant="ghost"
       />

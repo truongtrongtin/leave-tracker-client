@@ -19,7 +19,7 @@ import {
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import AppLink from 'components/AppLink';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { fetchData } from 'services/fetchData';
@@ -33,7 +33,7 @@ type SignupInputs = {
   lastName: string;
 };
 
-const loginSchema = yup.object().shape({
+const signupSchema = yup.object().shape({
   email: yup.string().required().email(),
   password: yup.string().required(),
   firstName: yup.string().required(),
@@ -45,8 +45,12 @@ export default function Signup() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [, setLocation] = useLocation();
-  const { register, handleSubmit, errors } = useForm({
-    resolver: yupResolver(loginSchema),
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(signupSchema),
   });
 
   const onSubmit = async ({
@@ -92,33 +96,20 @@ export default function Signup() {
                 <Input
                   autoFocus
                   type="text"
-                  name="firstName"
-                  ref={register}
+                  {...register('firstName')}
                   size="lg"
                 />
                 <FormErrorMessage>{errors.firstName?.message}</FormErrorMessage>
               </FormControl>
               <FormControl isRequired isInvalid={Boolean(errors.lastName)}>
                 <FormLabel htmlFor="lastName">Last name</FormLabel>
-                <Input
-                  autoFocus
-                  type="text"
-                  name="lastName"
-                  ref={register}
-                  size="lg"
-                />
+                <Input type="text" {...register('lastName')} size="lg" />
                 <FormErrorMessage>{errors.lastName?.message}</FormErrorMessage>
               </FormControl>
             </SimpleGrid>
             <FormControl isRequired isInvalid={Boolean(errors.email)} mt={4}>
               <FormLabel htmlFor="email">Email</FormLabel>
-              <Input
-                autoFocus
-                type="email"
-                name="email"
-                ref={register}
-                size="lg"
-              />
+              <Input type="email" {...register('email')} size="lg" />
               <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
             </FormControl>
             <FormControl isRequired isInvalid={Boolean(errors.password)} mt={4}>
@@ -126,8 +117,7 @@ export default function Signup() {
               <InputGroup size="lg">
                 <Input
                   type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  ref={register}
+                  {...register('password')}
                 />
                 <InputRightElement>
                   <IconButton

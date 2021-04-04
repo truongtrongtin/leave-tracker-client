@@ -2,47 +2,58 @@ import {
   Box,
   Button,
   Flex,
-  Icon,
+  HStack,
   IconButton,
   Image,
   Input,
   InputGroup,
   InputRightElement,
   Link,
+  Modal,
   Spacer,
   Text,
   useColorMode,
+  useDisclosure,
 } from '@chakra-ui/react';
 import logo from 'assets/icons/react.svg';
-import { AppContext } from 'contexts/AppContext';
-import React, { useContext } from 'react';
+import { User } from 'types/user';
 import { AiOutlineMenu, AiOutlineSearch } from 'react-icons/ai';
-import { BsBell, BsChat } from 'react-icons/bs';
 import { FaRegMoon, FaRegSun } from 'react-icons/fa';
+import { FiSettings } from 'react-icons/fi';
+import { useQueryClient } from 'react-query';
 import { fetchData } from 'services/fetchData';
 import { Link as RouteLink, useLocation } from 'wouter';
+import UserSetting, { NewUserSettings } from './UserSetting';
 
 export default function Header() {
   const [, setLocation] = useLocation();
-  const { currentUser, setCurrentUser } = useContext(AppContext);
   const { colorMode, toggleColorMode } = useColorMode();
+  const queryClient = useQueryClient();
+  const {
+    isOpen: isOpenUserSetting,
+    onOpen: onOpenUserSetting,
+    onClose: onCloseUserSetting,
+  } = useDisclosure();
+  const currentUser: User | undefined = queryClient.getQueryData('currentUser');
 
   const logout = async () => {
     try {
       await fetchData('/auth/logout', {
         method: 'POST',
       });
-      setCurrentUser(null);
+      queryClient.removeQueries('currentUser');
       setLocation('/login');
     } catch (error) {
       console.log(error);
     }
   };
 
-  console.log('This is from Header');
+  const handleUserSettingSubmit = (newUserSettings: NewUserSettings) => {
+    console.log('newUserSettings', newUserSettings);
+  };
 
   return (
-    <Flex
+    <HStack
       position="fixed"
       top={0}
       width="100%"
@@ -62,13 +73,11 @@ export default function Header() {
           </Link>
         </RouteLink>
       </Flex>
-      <Box>
-        <IconButton
-          backgroundColor="inherit"
-          aria-label="Toggle sidebar"
-          icon={<AiOutlineMenu />}
-        />
-      </Box>
+      <IconButton
+        backgroundColor="inherit"
+        aria-label="Toggle sidebar"
+        icon={<AiOutlineMenu />}
+      />
       <IconButton
         onClick={toggleColorMode}
         backgroundColor="inherit"
@@ -89,13 +98,19 @@ export default function Header() {
           </InputRightElement>
         </InputGroup>
       </Box>
-      <Box>
-        <Icon as={BsBell} />
-      </Box>
-      <Box>
-        <Icon as={BsChat} />
-      </Box>
+      <IconButton
+        onClick={onOpenUserSetting}
+        backgroundColor="inherit"
+        aria-label="Toggle sidebar"
+        icon={<FiSettings />}
+      />
       <Button onClick={logout}>Log out</Button>
-    </Flex>
+      <Modal isOpen={isOpenUserSetting} onClose={onCloseUserSetting}>
+        <UserSetting
+          onClose={onCloseUserSetting}
+          onSubmit={handleUserSettingSubmit}
+        />
+      </Modal>
+    </HStack>
   );
 }

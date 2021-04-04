@@ -1,5 +1,4 @@
 import { Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
-import React from 'react';
 import { Column, useTable } from 'react-table';
 
 type LDTableProps<D extends object = {}> = {

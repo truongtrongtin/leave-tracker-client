@@ -1,5 +1,4 @@
 import { Flex, Icon, Text } from '@chakra-ui/react';
-import React from 'react';
 import { FaRegCalendarTimes } from 'react-icons/fa';
 import { BiUser } from 'react-icons/bi';
 import AppLink from './AppLink';
@@ -26,7 +25,6 @@ const sidebarItems = [
     href: '/statistics',
   },
 ];
-console.log('This is from sidebar');
 
 export default function Sidebar() {
   return (
