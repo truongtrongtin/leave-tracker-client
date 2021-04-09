@@ -12,22 +12,21 @@ import {
   Modal,
   Spacer,
   Text,
-  useColorMode,
   useDisclosure,
+  useToast,
 } from '@chakra-ui/react';
 import logo from 'assets/icons/react.svg';
-import { User } from 'types/user';
-import { AiOutlineMenu, AiOutlineSearch } from 'react-icons/ai';
-import { FaRegMoon, FaRegSun } from 'react-icons/fa';
+import { AiOutlineSearch } from 'react-icons/ai';
 import { FiSettings } from 'react-icons/fi';
-import { useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { fetchData } from 'services/fetchData';
+import { User } from 'types/user';
 import { Link as RouteLink, useLocation } from 'wouter';
 import UserSetting, { NewUserSettings } from './UserSetting';
 
 export default function Header() {
+  const toast = useToast();
   const [, setLocation] = useLocation();
-  const { colorMode, toggleColorMode } = useColorMode();
   const queryClient = useQueryClient();
   const {
     isOpen: isOpenUserSetting,
@@ -48,9 +47,34 @@ export default function Header() {
     }
   };
 
-  const handleUserSettingSubmit = (newUserSettings: NewUserSettings) => {
-    console.log('newUserSettings', newUserSettings);
-  };
+  const updateCurrentUserMutation = useMutation(
+    (newUserSettings: NewUserSettings) => {
+      const {
+        firstName,
+        lastName,
+        currentPassword,
+        newPassword,
+      } = newUserSettings;
+      return fetchData('/users/edit/me', {
+        method: 'POST',
+        body: new URLSearchParams({
+          firstName,
+          lastName,
+          ...(currentPassword && { currentPassword }),
+          ...(newPassword && { password: newPassword }),
+        }),
+      });
+    },
+    {
+      onSuccess: (newUser: User) => {
+        queryClient.setQueryData('currentUser', newUser);
+        onCloseUserSetting();
+      },
+      onError: (error: Error) => {
+        toast({ description: error.message, status: 'error' });
+      },
+    },
+  );
 
   return (
     <HStack
@@ -73,18 +97,12 @@ export default function Header() {
           </Link>
         </RouteLink>
       </Flex>
-      <IconButton
-        backgroundColor="inherit"
-        aria-label="Toggle sidebar"
-        icon={<AiOutlineMenu />}
-      />
-      <IconButton
-        onClick={toggleColorMode}
-        backgroundColor="inherit"
-        aria-label="Toggle sidebar"
-        icon={colorMode === 'light' ? <FaRegMoon /> : <FaRegSun />}
-      />
-      <Text>Welcome {currentUser?.firstName}</Text>
+      <Text>
+        Welcome{' '}
+        <Text as="span" fontWeight="bold">
+          {currentUser?.firstName} {currentUser?.lastName}
+        </Text>
+      </Text>
       <Spacer />
       <Box>
         <InputGroup>
@@ -105,12 +123,17 @@ export default function Header() {
         icon={<FiSettings />}
       />
       <Button onClick={logout}>Log out</Button>
-      <Modal isOpen={isOpenUserSetting} onClose={onCloseUserSetting}>
-        <UserSetting
-          onClose={onCloseUserSetting}
-          onSubmit={handleUserSettingSubmit}
-        />
-      </Modal>
+      {currentUser && (
+        <Modal isOpen={isOpenUserSetting} onClose={onCloseUserSetting}>
+          <UserSetting
+            onClose={onCloseUserSetting}
+            onSubmit={(newUserSettings) =>
+              updateCurrentUserMutation.mutate(newUserSettings)
+            }
+            user={currentUser}
+          />
+        </Modal>
+      )}
     </HStack>
   );
 }

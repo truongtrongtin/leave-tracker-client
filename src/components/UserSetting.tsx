@@ -14,11 +14,11 @@ import {
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
-import { useQueryClient } from 'react-query';
 import { User } from 'types/user';
 import * as yup from 'yup';
 
 type UserSettingProps = {
+  user: User;
   onClose: () => void;
   isLoading?: boolean;
   onSubmit: (newUserSettings: NewUserSettings) => void;
@@ -27,7 +27,8 @@ type UserSettingProps = {
 export type NewUserSettings = {
   firstName: string;
   lastName: string;
-  timeZone: number;
+  currentPassword?: string;
+  newPassword?: string;
 };
 
 const userSettingSchema = yup.object().shape({
@@ -37,8 +38,7 @@ const userSettingSchema = yup.object().shape({
   newPassword: yup.string().notRequired(),
 });
 
-function UserSetting({ onClose, isLoading, onSubmit }: UserSettingProps) {
-  const queryClient = useQueryClient();
+function UserSetting({ user, onClose, isLoading, onSubmit }: UserSettingProps) {
   const {
     register,
     handleSubmit,
@@ -46,9 +46,6 @@ function UserSetting({ onClose, isLoading, onSubmit }: UserSettingProps) {
   } = useForm({
     resolver: yupResolver(userSettingSchema),
   });
-  const currentUser: User | undefined = queryClient.getQueryData('currentUser');
-
-  if (!currentUser) return <div>error</div>;
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)}>
       <ModalOverlay />
@@ -61,7 +58,7 @@ function UserSetting({ onClose, isLoading, onSubmit }: UserSettingProps) {
               <FormLabel htmlFor="firstName">First name</FormLabel>
               <Input
                 type="text"
-                defaultValue={currentUser.firstName}
+                defaultValue={user.firstName}
                 {...register('firstName')}
               />
               <FormErrorMessage>{errors.firstName?.message}</FormErrorMessage>
@@ -70,7 +67,7 @@ function UserSetting({ onClose, isLoading, onSubmit }: UserSettingProps) {
               <FormLabel htmlFor="lastName">Last name</FormLabel>
               <Input
                 type="text"
-                defaultValue={currentUser.lastName}
+                defaultValue={user.lastName}
                 {...register('lastName')}
               />
               <FormErrorMessage>{errors.lastName?.message}</FormErrorMessage>

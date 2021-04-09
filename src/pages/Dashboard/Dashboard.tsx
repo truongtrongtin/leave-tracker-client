@@ -65,7 +65,7 @@ export default function Dashboard() {
   const createLeaveMutation = useMutation(
     (newLeave: NewLeaveInputs) => {
       const { startAt, endAt, reason, userId } = newLeave;
-      return fetchData(userId ? '/leaves/admin.add' : '/leaves/add', {
+      return fetchData('/leaves/add', {
         method: 'POST',
         body: new URLSearchParams({
           startAt,
@@ -84,20 +84,24 @@ export default function Dashboard() {
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
+        onCloseCreate();
       },
     },
   );
 
   const updateLeaveMutation = useMutation(
-    (newLeave: NewLeaveInputs) =>
-      fetchData(`/leaves/${selectedLeave?.id}/edit`, {
+    (newLeave: NewLeaveInputs) => {
+      const { startAt, endAt, reason, userId } = newLeave;
+      return fetchData(`/leaves/${selectedLeave?.id}/edit`, {
         method: 'POST',
         body: new URLSearchParams({
-          startAt: newLeave.startAt,
-          endAt: newLeave.endAt,
-          reason: newLeave.reason,
+          startAt,
+          endAt,
+          reason,
+          ...(userId && { userId: userId }),
         }),
-      }),
+      });
+    },
     {
       onSuccess: (newLeave: Leave) => {
         queryClient.setQueryData('leaves', (old: any) => {
@@ -111,6 +115,7 @@ export default function Dashboard() {
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
+        handleLeaveUnselect();
       },
     },
   );
@@ -132,6 +137,7 @@ export default function Dashboard() {
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
+        handleLeaveUnselect();
       },
     },
   );
@@ -175,7 +181,9 @@ export default function Dashboard() {
         id: leave.id,
         start: new Date(leave.startAt),
         end: new Date(leave.endAt),
-        title: `${leave.user.firstName} off ${generateDayPart(leave)}`,
+        title: `${
+          currentUser?.id === leave.user.id ? 'You' : leave.user.firstName
+        } off ${generateDayPart(leave)}`,
       };
     }) || [];
 
