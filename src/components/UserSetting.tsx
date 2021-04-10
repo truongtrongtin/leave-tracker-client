@@ -16,6 +16,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
 import { User } from 'types/user';
 import * as yup from 'yup';
+import PasswordInput from './PasswordInput';
 
 type UserSettingProps = {
   user: User;
@@ -27,14 +28,14 @@ type UserSettingProps = {
 export type NewUserSettings = {
   firstName: string;
   lastName: string;
-  currentPassword?: string;
+  password?: string;
   newPassword?: string;
 };
 
 const userSettingSchema = yup.object().shape({
   firstName: yup.string().required(),
   lastName: yup.string().required(),
-  currentPassword: yup.string().notRequired(),
+  password: yup.string().notRequired(),
   newPassword: yup.string().notRequired(),
 });
 
@@ -46,6 +47,7 @@ function UserSetting({ user, onClose, isLoading, onSubmit }: UserSettingProps) {
   } = useForm({
     resolver: yupResolver(userSettingSchema),
   });
+
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)}>
       <ModalOverlay />
@@ -74,16 +76,14 @@ function UserSetting({ user, onClose, isLoading, onSubmit }: UserSettingProps) {
             </FormControl>
           </SimpleGrid>
           <SimpleGrid columns={2} spacing={2} mt={4}>
-            <FormControl isInvalid={Boolean(errors.currentPassword)}>
-              <FormLabel htmlFor="currentPassword">Current password</FormLabel>
-              <Input type="text" {...register('currentPassword')} />
-              <FormErrorMessage>
-                {errors.currentPassword?.message}
-              </FormErrorMessage>
+            <FormControl isInvalid={Boolean(errors.password)} mt={4}>
+              <FormLabel htmlFor="password">Current password</FormLabel>
+              <PasswordInput {...register('password')} />
+              <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
             </FormControl>
-            <FormControl isInvalid={Boolean(errors.newPassword)}>
+            <FormControl isInvalid={Boolean(errors.newPassword)} mt={4}>
               <FormLabel htmlFor="newPassword">New password</FormLabel>
-              <Input type="text" {...register('newPassword')} />
+              <PasswordInput {...register('newPassword')} />
               <FormErrorMessage>{errors.newPassword?.message}</FormErrorMessage>
             </FormControl>
           </SimpleGrid>

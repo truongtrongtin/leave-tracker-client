@@ -10,18 +10,15 @@ import {
   FormErrorMessage,
   FormLabel,
   Heading,
-  IconButton,
   Input,
-  InputGroup,
-  InputRightElement,
   SimpleGrid,
   Text,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import AppLink from 'components/AppLink';
+import PasswordInput from 'components/PasswordInput';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { fetchData } from 'services/fetchData';
 import { useLocation } from 'wouter';
 import * as yup from 'yup';
@@ -43,7 +40,6 @@ const signupSchema = yup.object().shape({
 export default function Signup() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [, setLocation] = useLocation();
   const {
     register,
@@ -66,13 +62,11 @@ export default function Signup() {
         body: new URLSearchParams({ email, password, firstName, lastName }),
       });
       setIsLoading(false);
-      setShowPassword(false);
       setError('');
       setLocation('/login');
     } catch (error) {
       setError(error.message);
       setIsLoading(false);
-      setShowPassword(false);
     }
   };
 
@@ -93,46 +87,23 @@ export default function Signup() {
             <SimpleGrid columns={2} spacing={2}>
               <FormControl isRequired isInvalid={Boolean(errors.firstName)}>
                 <FormLabel htmlFor="firstName">First name</FormLabel>
-                <Input
-                  autoFocus
-                  type="text"
-                  {...register('firstName')}
-                  size="lg"
-                />
+                <Input autoFocus type="text" {...register('firstName')} />
                 <FormErrorMessage>{errors.firstName?.message}</FormErrorMessage>
               </FormControl>
               <FormControl isRequired isInvalid={Boolean(errors.lastName)}>
                 <FormLabel htmlFor="lastName">Last name</FormLabel>
-                <Input type="text" {...register('lastName')} size="lg" />
+                <Input type="text" {...register('lastName')} />
                 <FormErrorMessage>{errors.lastName?.message}</FormErrorMessage>
               </FormControl>
             </SimpleGrid>
             <FormControl isRequired isInvalid={Boolean(errors.email)} mt={4}>
               <FormLabel htmlFor="email">Email</FormLabel>
-              <Input type="email" {...register('email')} size="lg" />
+              <Input type="email" {...register('email')} />
               <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
             </FormControl>
             <FormControl isRequired isInvalid={Boolean(errors.password)} mt={4}>
               <FormLabel htmlFor="password">Password</FormLabel>
-              <InputGroup size="lg">
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  {...register('password')}
-                />
-                <InputRightElement>
-                  <IconButton
-                    aria-label="Toggle password"
-                    onClick={() => setShowPassword(!showPassword)}
-                    icon={
-                      showPassword ? (
-                        <AiOutlineEyeInvisible />
-                      ) : (
-                        <AiOutlineEye />
-                      )
-                    }
-                  />
-                </InputRightElement>
-              </InputGroup>
+              <PasswordInput {...register('password')} />
               <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
             </FormControl>
             <Button

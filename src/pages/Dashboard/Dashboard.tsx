@@ -84,7 +84,6 @@ export default function Dashboard() {
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
-        onCloseCreate();
       },
     },
   );
@@ -115,7 +114,6 @@ export default function Dashboard() {
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
-        handleLeaveUnselect();
       },
     },
   );
@@ -137,7 +135,6 @@ export default function Dashboard() {
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
-        handleLeaveUnselect();
       },
     },
   );
@@ -183,7 +180,7 @@ export default function Dashboard() {
         end: new Date(leave.endAt),
         title: `${
           currentUser?.id === leave.user.id ? 'You' : leave.user.firstName
-        } off ${generateDayPart(leave)}`,
+        } (${generateDayPart(leave)})`,
       };
     }) || [];
 

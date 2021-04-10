@@ -49,19 +49,14 @@ export default function Header() {
 
   const updateCurrentUserMutation = useMutation(
     (newUserSettings: NewUserSettings) => {
-      const {
-        firstName,
-        lastName,
-        currentPassword,
-        newPassword,
-      } = newUserSettings;
+      const { firstName, lastName, password, newPassword } = newUserSettings;
       return fetchData('/users/edit/me', {
         method: 'POST',
         body: new URLSearchParams({
           firstName,
           lastName,
-          ...(currentPassword && { currentPassword }),
-          ...(newPassword && { password: newPassword }),
+          ...(password && { currentPassword: password }),
+          ...(newPassword && { newPassword }),
         }),
       });
     },

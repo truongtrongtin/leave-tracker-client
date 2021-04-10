@@ -10,18 +10,15 @@ import {
   FormErrorMessage,
   FormLabel,
   Heading,
-  IconButton,
   Input,
-  InputGroup,
-  InputRightElement,
   Text,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import AppLink from 'components/AppLink';
+import PasswordInput from 'components/PasswordInput';
 import ability, { defineRulesFor } from 'config/ability';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { useQueryClient } from 'react-query';
 import { fetchData } from 'services/fetchData';
 import { User } from 'types/user';
@@ -41,7 +38,6 @@ const loginSchema = yup.object().shape({
 export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const currentUser: User | undefined = queryClient.getQueryData('currentUser');
@@ -64,13 +60,11 @@ export default function Login() {
       queryClient.setQueryData('currentUser', user);
       ability.update(defineRulesFor(user));
       setIsLoading(false);
-      setShowPassword(false);
       setError('');
       setLocation('/');
     } catch (error) {
       setError(error.message);
       setIsLoading(false);
-      setShowPassword(false);
     }
   };
 
@@ -91,30 +85,12 @@ export default function Login() {
             )}
             <FormControl isRequired isInvalid={Boolean(errors.email)}>
               <FormLabel htmlFor="email">Email</FormLabel>
-              <Input autoFocus type="email" {...register('email')} size="lg" />
+              <Input autoFocus type="email" {...register('email')} />
               <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
             </FormControl>
             <FormControl isRequired isInvalid={Boolean(errors.password)} mt={6}>
               <FormLabel htmlFor="password">Password</FormLabel>
-              <InputGroup size="lg">
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  {...register('password')}
-                />
-                <InputRightElement>
-                  <IconButton
-                    aria-label="Toggle password"
-                    onClick={() => setShowPassword(!showPassword)}
-                    icon={
-                      showPassword ? (
-                        <AiOutlineEyeInvisible />
-                      ) : (
-                        <AiOutlineEye />
-                      )
-                    }
-                  />
-                </InputRightElement>
-              </InputGroup>
+              <PasswordInput {...register('password')} />
               <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
             </FormControl>
             <Button

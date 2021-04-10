@@ -4,6 +4,7 @@ import {
   FormErrorMessage,
   FormLabel,
   HStack,
+  Input,
   ModalBody,
   ModalCloseButton,
   ModalContent,
@@ -14,7 +15,6 @@ import {
   RadioGroup,
   Select,
   Spacer,
-  Textarea,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useEffect, useState } from 'react';
@@ -61,7 +61,7 @@ const newLeaveSchema = yup.object().shape({
   userId: yup.string().notRequired(),
   leaveDate: yup.date().required(),
   dayPart: yup.string().required(),
-  reason: yup.string().required(),
+  reason: yup.string(),
 });
 
 const getCurrentBusinessDay = () => {
@@ -222,9 +222,9 @@ function NewLeave({
               )}
             />
           </FormControl>
-          <FormControl isRequired isInvalid={Boolean(errors.reason)} mt={4}>
-            <FormLabel htmlFor="reason">Reason</FormLabel>
-            <Textarea {...register('reason')} />
+          <FormControl isInvalid={Boolean(errors.reason)} mt={4}>
+            <FormLabel htmlFor="reason">Reason (optional)</FormLabel>
+            <Input {...register('reason')} />
             <FormErrorMessage>{errors.reason?.message}</FormErrorMessage>
           </FormControl>
         </ModalBody>
