@@ -14,6 +14,7 @@ import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { fetchData } from 'services/fetchData';
+import { Birthday } from 'types/birthday';
 import { User } from 'types/user';
 
 const locales = {
@@ -38,6 +39,7 @@ type LeaveEvent = {
   start: Date;
   end: Date;
   title: string;
+  resource: any;
 };
 
 export default function Dashboard() {
@@ -60,6 +62,10 @@ export default function Dashboard() {
 
   const getLeavesQuery = useQuery<LeaveResponse>('leaves', () =>
     fetchData('/leaves'),
+  );
+
+  const getBirthdaysQuery = useQuery('birthdays', () =>
+    fetchData('/users/birthday'),
   );
 
   const createLeaveMutation = useMutation(
@@ -155,6 +161,7 @@ export default function Dashboard() {
   };
 
   const handleLeaveSelect = (leaveEvent: LeaveEvent) => {
+    if (leaveEvent.resource.type !== 'leave') return;
     const leave = getLeavesById(leaveEvent.id);
     setSelectedLeave(leave);
     onOpenEdit();
@@ -172,8 +179,26 @@ export default function Dashboard() {
     return 'unknown';
   };
 
-  const leaveEvents: LeaveEvent[] =
-    getLeavesQuery.data?.items.map((leave: Leave) => {
+  const birthdayEvents: LeaveEvent[] = (getBirthdaysQuery.data || [])
+    .filter((birthday: Birthday) => birthday.birthday)
+    .map((birthday: any) => {
+      const thisYearBirthday = new Date(birthday.birthday);
+      const thisYear = new Date().getFullYear();
+      thisYearBirthday.setFullYear(thisYear);
+      return {
+        start: new Date(thisYearBirthday),
+        end: new Date(thisYearBirthday),
+        allDay: true,
+        title:
+          currentUser?.id === birthday.id
+            ? 'Your birthday'
+            : `${birthday.firstName} 's birthday`,
+        resource: { ...birthday, type: 'birthday' },
+      };
+    });
+
+  const leaveEvents: LeaveEvent[] = (getLeavesQuery.data?.items || []).map(
+    (leave: Leave) => {
       return {
         id: leave.id,
         start: new Date(leave.startAt),
@@ -181,17 +206,27 @@ export default function Dashboard() {
         title: `${
           currentUser?.id === leave.user.id ? 'You' : leave.user.firstName
         } (${generateDayPart(leave)})`,
+        resource: { ...leave, type: 'leave' },
       };
-    }) || [];
+    },
+  );
 
   const customEventStyle = (leaveEvent: LeaveEvent) => {
-    const leave = getLeavesById(leaveEvent.id);
-    if (leave?.user.id === currentUser?.id) {
+    if (leaveEvent.resource.type === 'birthday')
       return {
         style: {
-          backgroundColor: 'green',
+          backgroundColor: 'red',
         },
       };
+    if (leaveEvent.resource.type === 'leave') {
+      const leave = getLeavesById(leaveEvent.id);
+      if (leave?.user.id === currentUser?.id) {
+        return {
+          style: {
+            backgroundColor: 'green',
+          },
+        };
+      }
     }
     return {};
   };
@@ -209,7 +244,7 @@ export default function Dashboard() {
           views={['month']}
           eventPropGetter={customEventStyle}
           localizer={localizer}
-          events={leaveEvents}
+          events={[...leaveEvents, ...birthdayEvents]}
           onSelectEvent={handleLeaveSelect}
         />
       </Box>

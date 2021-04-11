@@ -1,13 +1,9 @@
 import {
-  Box,
   Button,
   Flex,
   HStack,
   IconButton,
   Image,
-  Input,
-  InputGroup,
-  InputRightElement,
   Link,
   Modal,
   Spacer,
@@ -16,10 +12,10 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import logo from 'assets/icons/react.svg';
-import { AiOutlineSearch } from 'react-icons/ai';
 import { FiSettings } from 'react-icons/fi';
 import { useMutation, useQueryClient } from 'react-query';
 import { fetchData } from 'services/fetchData';
+import { Birthday } from 'types/birthday';
 import { User } from 'types/user';
 import { Link as RouteLink, useLocation } from 'wouter';
 import UserSetting, { NewUserSettings } from './UserSetting';
@@ -49,7 +45,13 @@ export default function Header() {
 
   const updateCurrentUserMutation = useMutation(
     (newUserSettings: NewUserSettings) => {
-      const { firstName, lastName, password, newPassword } = newUserSettings;
+      const {
+        firstName,
+        lastName,
+        password,
+        newPassword,
+        birthday,
+      } = newUserSettings;
       return fetchData('/users/edit/me', {
         method: 'POST',
         body: new URLSearchParams({
@@ -57,12 +59,22 @@ export default function Header() {
           lastName,
           ...(password && { currentPassword: password }),
           ...(newPassword && { newPassword }),
+          ...(birthday && { birthday: birthday.toISOString() }),
         }),
       });
     },
     {
       onSuccess: (newUser: User) => {
         queryClient.setQueryData('currentUser', newUser);
+        queryClient.setQueryData('birthdays', (old: any) => {
+          const newBirthdays = old.map((birthday: Birthday) => {
+            if (birthday.id === newUser.id) {
+              return { ...birthday, birthday: newUser.birthday };
+            }
+            return birthday;
+          });
+          return newBirthdays;
+        });
         onCloseUserSetting();
       },
       onError: (error: Error) => {
@@ -85,7 +97,7 @@ export default function Header() {
       backgroundColor="white"
       zIndex={5}
     >
-      <Flex justifyContent="center" width={56}>
+      <Flex justifyContent="center" width={{ base: 20, md: 56 }}>
         <RouteLink href="/">
           <Link>
             <Image width="40px" height="40px" src={logo} alt="logo" />
@@ -95,22 +107,10 @@ export default function Header() {
       <Text>
         Welcome{' '}
         <Text as="span" fontWeight="bold">
-          {currentUser?.firstName} {currentUser?.lastName}
+          {currentUser?.firstName}
         </Text>
       </Text>
       <Spacer />
-      <Box>
-        <InputGroup>
-          <Input placeholder="Search here" />
-          <InputRightElement>
-            <IconButton
-              size="sm"
-              aria-label="Search"
-              icon={<AiOutlineSearch />}
-            />
-          </InputRightElement>
-        </InputGroup>
-      </Box>
       <IconButton
         onClick={onOpenUserSetting}
         backgroundColor="inherit"

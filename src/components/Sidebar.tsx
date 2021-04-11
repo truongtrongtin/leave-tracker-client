@@ -1,16 +1,16 @@
 import { Flex, Icon, Text } from '@chakra-ui/react';
-import { FaRegCalendarTimes } from 'react-icons/fa';
-import { BiUser } from 'react-icons/bi';
+import { BiBarChart, BiCalendar, BiUser } from 'react-icons/bi';
+import { FaStreetView } from 'react-icons/fa';
 import AppLink from './AppLink';
 
 const sidebarItems = [
   {
-    icon: FaRegCalendarTimes,
+    icon: BiCalendar,
     name: 'Dashboard',
     href: '/dashboard',
   },
   {
-    icon: FaRegCalendarTimes,
+    icon: FaStreetView,
     name: 'My Leaves',
     href: '/leaves',
   },
@@ -20,7 +20,7 @@ const sidebarItems = [
     href: '/employees',
   },
   {
-    icon: BiUser,
+    icon: BiBarChart,
     name: 'Statistic',
     href: '/statistics',
   },
@@ -30,7 +30,7 @@ export default function Sidebar() {
   return (
     <Flex
       direction="column"
-      width={56}
+      width={{ base: 0, md: 56 }}
       borderRight="1px"
       borderRightColor="gray.200"
       boxShadow="base"

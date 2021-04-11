@@ -13,7 +13,8 @@ import {
   SimpleGrid,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useForm } from 'react-hook-form';
+import ReactDatePicker from 'react-datepicker';
+import { Controller, useForm } from 'react-hook-form';
 import { User } from 'types/user';
 import * as yup from 'yup';
 import PasswordInput from './PasswordInput';
@@ -30,6 +31,7 @@ export type NewUserSettings = {
   lastName: string;
   password?: string;
   newPassword?: string;
+  birthday?: Date;
 };
 
 const userSettingSchema = yup.object().shape({
@@ -44,6 +46,7 @@ function UserSetting({ user, onClose, isLoading, onSubmit }: UserSettingProps) {
     register,
     handleSubmit,
     formState: { errors },
+    control,
   } = useForm({
     resolver: yupResolver(userSettingSchema),
   });
@@ -76,12 +79,35 @@ function UserSetting({ user, onClose, isLoading, onSubmit }: UserSettingProps) {
             </FormControl>
           </SimpleGrid>
           <SimpleGrid columns={2} spacing={2} mt={4}>
-            <FormControl isInvalid={Boolean(errors.password)} mt={4}>
+            <FormControl
+              style={{ zIndex: 1 }}
+              isInvalid={Boolean(errors.birthday)}
+            >
+              <FormLabel htmlFor="birthday">Birthday</FormLabel>
+              <Controller
+                name="birthday"
+                control={control}
+                defaultValue={user.birthday ? new Date(user.birthday) : null}
+                render={({ field: { value, onChange } }) => (
+                  <ReactDatePicker
+                    selected={value}
+                    onChange={onChange}
+                    dateFormat="MMM d, yyyy"
+                    placeholderText="Select your birthday"
+                    showYearDropdown
+                  />
+                )}
+              />
+              <FormErrorMessage>{errors.lastName?.message}</FormErrorMessage>
+            </FormControl>
+          </SimpleGrid>
+          <SimpleGrid columns={2} spacing={2} mt={4}>
+            <FormControl isInvalid={Boolean(errors.password)}>
               <FormLabel htmlFor="password">Current password</FormLabel>
               <PasswordInput {...register('password')} />
               <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
             </FormControl>
-            <FormControl isInvalid={Boolean(errors.newPassword)} mt={4}>
+            <FormControl isInvalid={Boolean(errors.newPassword)}>
               <FormLabel htmlFor="newPassword">New password</FormLabel>
               <PasswordInput {...register('newPassword')} />
               <FormErrorMessage>{errors.newPassword?.message}</FormErrorMessage>
