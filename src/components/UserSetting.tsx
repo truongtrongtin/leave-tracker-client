@@ -22,7 +22,7 @@ import PasswordInput from './PasswordInput';
 type UserSettingProps = {
   user: User;
   onClose: () => void;
-  isLoading?: boolean;
+  isLoading: boolean;
   onSubmit: (newUserSettings: NewUserSettings) => void;
 };
 
@@ -31,7 +31,7 @@ export type NewUserSettings = {
   lastName: string;
   password?: string;
   newPassword?: string;
-  birthday?: Date;
+  dateOfBirth?: Date;
 };
 
 const userSettingSchema = yup.object().shape({
@@ -81,19 +81,21 @@ function UserSetting({ user, onClose, isLoading, onSubmit }: UserSettingProps) {
           <SimpleGrid columns={2} spacing={2} mt={4}>
             <FormControl
               style={{ zIndex: 1 }}
-              isInvalid={Boolean(errors.birthday)}
+              isInvalid={Boolean(errors.dateOfBirth)}
             >
-              <FormLabel htmlFor="birthday">Birthday</FormLabel>
+              <FormLabel htmlFor="dateOfBirth">Date of Birth</FormLabel>
               <Controller
-                name="birthday"
+                name="dateOfBirth"
                 control={control}
-                defaultValue={user.birthday ? new Date(user.birthday) : null}
+                defaultValue={
+                  user.dateOfBirth ? new Date(user.dateOfBirth) : null
+                }
                 render={({ field: { value, onChange } }) => (
                   <ReactDatePicker
                     selected={value}
                     onChange={onChange}
                     dateFormat="MMM d, yyyy"
-                    placeholderText="Select your birthday"
+                    placeholderText="Date of birth"
                     showYearDropdown
                   />
                 )}

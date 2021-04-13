@@ -10,5 +10,5 @@ export type User = {
   lastName: string;
   role: Role;
   avatar: string;
-  birthday?: Date;
+  dateOfBirth?: Date;
 };

@@ -14,7 +14,7 @@ import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { fetchData } from 'services/fetchData';
-import { Birthday } from 'types/birthday';
+import { DateOfBirth } from 'types/dateOfBirth';
 import { User } from 'types/user';
 
 const locales = {
@@ -64,8 +64,8 @@ export default function Dashboard() {
     fetchData('/leaves'),
   );
 
-  const getBirthdaysQuery = useQuery('birthdays', () =>
-    fetchData('/users/birthday'),
+  const getDateOfBirthsQuery = useQuery('dateOfBirths', () =>
+    fetchData('/users/dateOfBirth'),
   );
 
   const createLeaveMutation = useMutation(
@@ -87,6 +87,7 @@ export default function Dashboard() {
           return { ...old, items: [newLeave, ...old.items] };
         });
         onCloseCreate();
+        toast({ description: 'Successfully created', status: 'success' });
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
@@ -117,6 +118,7 @@ export default function Dashboard() {
           return { ...old, items: newLeaves };
         });
         handleLeaveUnselect();
+        toast({ description: 'Successfully updated', status: 'success' });
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
@@ -138,6 +140,7 @@ export default function Dashboard() {
           return { ...old, items: newLeaves };
         });
         handleLeaveUnselect();
+        toast({ description: 'Successfully deleted', status: 'success' });
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
@@ -179,21 +182,21 @@ export default function Dashboard() {
     return 'unknown';
   };
 
-  const birthdayEvents: LeaveEvent[] = (getBirthdaysQuery.data || [])
-    .filter((birthday: Birthday) => birthday.birthday)
-    .map((birthday: any) => {
-      const thisYearBirthday = new Date(birthday.birthday);
+  const dateOfBirthEvents: LeaveEvent[] = (getDateOfBirthsQuery.data || [])
+    .filter((dateOfBirth: DateOfBirth) => dateOfBirth.dateOfBirth)
+    .map((dateOfBirth: any) => {
+      const thisYearDateOfBirth = new Date(dateOfBirth.dateOfBirth);
       const thisYear = new Date().getFullYear();
-      thisYearBirthday.setFullYear(thisYear);
+      thisYearDateOfBirth.setFullYear(thisYear);
       return {
-        start: new Date(thisYearBirthday),
-        end: new Date(thisYearBirthday),
+        start: new Date(thisYearDateOfBirth),
+        end: new Date(thisYearDateOfBirth),
         allDay: true,
         title:
-          currentUser?.id === birthday.id
+          currentUser?.id === dateOfBirth.id
             ? 'Your birthday'
-            : `${birthday.firstName} 's birthday`,
-        resource: { ...birthday, type: 'birthday' },
+            : `${dateOfBirth.firstName} 's birthday`,
+        resource: { ...dateOfBirth, type: 'dateOfBirth' },
       };
     });
 
@@ -212,7 +215,7 @@ export default function Dashboard() {
   );
 
   const customEventStyle = (leaveEvent: LeaveEvent) => {
-    if (leaveEvent.resource.type === 'birthday')
+    if (leaveEvent.resource.type === 'dateOfBirth')
       return {
         style: {
           backgroundColor: 'red',
@@ -244,14 +247,14 @@ export default function Dashboard() {
           views={['month']}
           eventPropGetter={customEventStyle}
           localizer={localizer}
-          events={[...leaveEvents, ...birthdayEvents]}
+          events={[...leaveEvents, ...dateOfBirthEvents]}
           onSelectEvent={handleLeaveSelect}
         />
       </Box>
       <Modal isOpen={isOpenCreate} onClose={onCloseCreate}>
         <NewLeave
           onClose={onCloseCreate}
-          isSubmiting={createLeaveMutation.isLoading}
+          isLoading={createLeaveMutation.isLoading}
           onSubmit={(newLeave) => createLeaveMutation.mutate(newLeave)}
         />
       </Modal>
@@ -261,7 +264,7 @@ export default function Dashboard() {
             leave={selectedLeave}
             onClose={handleLeaveUnselect}
             onDelete={() => deleteLeaveMutation.mutate(selectedLeave.id)}
-            isSubmiting={updateLeaveMutation.isLoading}
+            isLoading={updateLeaveMutation.isLoading}
             isDeleting={deleteLeaveMutation.isLoading}
             onSubmit={(newLeave) => updateLeaveMutation.mutate(newLeave)}
           />

@@ -15,7 +15,7 @@ import logo from 'assets/icons/react.svg';
 import { FiSettings } from 'react-icons/fi';
 import { useMutation, useQueryClient } from 'react-query';
 import { fetchData } from 'services/fetchData';
-import { Birthday } from 'types/birthday';
+import { DateOfBirth } from 'types/dateOfBirth';
 import { User } from 'types/user';
 import { Link as RouteLink, useLocation } from 'wouter';
 import UserSetting, { NewUserSettings } from './UserSetting';
@@ -50,7 +50,7 @@ export default function Header() {
         lastName,
         password,
         newPassword,
-        birthday,
+        dateOfBirth,
       } = newUserSettings;
       return fetchData('/users/edit/me', {
         method: 'POST',
@@ -59,23 +59,24 @@ export default function Header() {
           lastName,
           ...(password && { currentPassword: password }),
           ...(newPassword && { newPassword }),
-          ...(birthday && { birthday: birthday.toISOString() }),
+          ...(dateOfBirth && { dateOfBirth: dateOfBirth.toISOString() }),
         }),
       });
     },
     {
       onSuccess: (newUser: User) => {
         queryClient.setQueryData('currentUser', newUser);
-        queryClient.setQueryData('birthdays', (old: any) => {
-          const newBirthdays = old.map((birthday: Birthday) => {
-            if (birthday.id === newUser.id) {
-              return { ...birthday, birthday: newUser.birthday };
+        queryClient.setQueryData('dateOfBirths', (old: any) => {
+          const newDateOfBirths = old.map((dateOfBirth: DateOfBirth) => {
+            if (dateOfBirth.id === newUser.id) {
+              return { ...dateOfBirth, dateOfBirth: newUser.dateOfBirth };
             }
-            return birthday;
+            return dateOfBirth;
           });
-          return newBirthdays;
+          return newDateOfBirths;
         });
         onCloseUserSetting();
+        toast({ description: 'Successfully updated', status: 'success' });
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
@@ -126,6 +127,7 @@ export default function Header() {
               updateCurrentUserMutation.mutate(newUserSettings)
             }
             user={currentUser}
+            isLoading={updateCurrentUserMutation.isLoading}
           />
         </Modal>
       )}

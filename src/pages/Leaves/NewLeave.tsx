@@ -30,7 +30,7 @@ import { Leave } from './Leaves';
 
 type NewLeaveProps = {
   leave?: Leave;
-  isSubmiting: boolean;
+  isLoading: boolean;
   isDeleting?: boolean;
   onClose: () => void;
   onSubmit: (newLeave: NewLeaveInputs) => void;
@@ -88,7 +88,7 @@ const getInitialDayPart = (leave: Leave) => {
 
 function NewLeave({
   leave,
-  isSubmiting,
+  isLoading,
   isDeleting,
   onClose,
   onSubmit,
@@ -244,7 +244,7 @@ function NewLeave({
             Close
           </Button>
           {
-            <Button colorScheme="blue" type="submit" isLoading={isSubmiting}>
+            <Button colorScheme="blue" type="submit" isLoading={isLoading}>
               Submit
             </Button>
           }

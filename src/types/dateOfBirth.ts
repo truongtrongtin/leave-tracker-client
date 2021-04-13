@@ -1,6 +1,6 @@
-export type Birthday = {
+export type DateOfBirth = {
   id: string;
   firstName: string;
   lastName: string;
-  birthday: string | null;
+  dateOfBirth: string | null;
 };
