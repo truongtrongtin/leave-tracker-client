@@ -68,6 +68,18 @@ export default function Dashboard() {
     fetchData('/users/dateOfBirth'),
   );
 
+  const getHolidaysQuery: any = useQuery('holidays', () =>
+    fetchData('/holidays'),
+  );
+
+  const holidays =
+    getHolidaysQuery.data?.map((item: any) => ({
+      title: item.summary,
+      start: new Date(item.start.date),
+      end: new Date(item.start.date),
+      resource: { type: 'holiday' },
+    })) || [];
+
   const createLeaveMutation = useMutation(
     (newLeave: NewLeaveInputs) => {
       const { startAt, endAt, reason, userId } = newLeave;
@@ -221,12 +233,18 @@ export default function Dashboard() {
           backgroundColor: 'red',
         },
       };
+    if (leaveEvent.resource.type === 'holiday')
+      return {
+        style: {
+          backgroundColor: 'green',
+        },
+      };
     if (leaveEvent.resource.type === 'leave') {
       const leave = getLeavesById(leaveEvent.id);
       if (leave?.user.id === currentUser?.id) {
         return {
           style: {
-            backgroundColor: 'green',
+            backgroundColor: 'blue',
           },
         };
       }
@@ -247,7 +265,7 @@ export default function Dashboard() {
           views={['month']}
           eventPropGetter={customEventStyle}
           localizer={localizer}
-          events={[...leaveEvents, ...dateOfBirthEvents]}
+          events={[...leaveEvents, ...dateOfBirthEvents, ...holidays]}
           onSelectEvent={handleLeaveSelect}
         />
       </Box>
