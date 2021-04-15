@@ -17,12 +17,10 @@ import {
   Spacer,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Controller, useForm } from 'react-hook-form';
 import { useQueryClient } from 'react-query';
-import { fetchData } from 'services/fetchData';
 import { Role, User } from 'types/user';
 import * as yup from 'yup';
 import './date-picker.css';
@@ -96,13 +94,13 @@ function NewLeave({
 }: NewLeaveProps) {
   const queryClient = useQueryClient();
   const currentUser: User | undefined = queryClient.getQueryData('currentUser');
-  const [users, setUsers] = useState<User[]>([]);
+  const users: User[] | undefined = queryClient.getQueryData('users');
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     control,
-    setValue,
   } = useForm<FormFields>({
     resolver: yupResolver(newLeaveSchema),
     defaultValues: {
@@ -143,18 +141,6 @@ function NewLeave({
     });
   };
 
-  useEffect(() => {
-    if (users.length) return;
-    const getAllUsers = async () => {
-      try {
-        const users = await fetchData('/users');
-        setUsers(users);
-        leave && setValue('userId', leave.user.id);
-      } catch (error) {}
-    };
-    getAllUsers();
-  }, [setValue, users, leave]);
-
   return (
     <form noValidate onSubmit={handleSubmit(handleSubmitLogic)}>
       <ModalOverlay />
@@ -168,7 +154,7 @@ function NewLeave({
             <FormControl isInvalid={Boolean(errors.userId)}>
               <FormLabel htmlFor="userId">User</FormLabel>
               <Select {...register('userId')} placeholder="Select option">
-                {users.map((user) => (
+                {(users || []).map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.firstName} {user.lastName}
                   </option>
@@ -177,7 +163,7 @@ function NewLeave({
               <FormErrorMessage>{errors.userId?.message}</FormErrorMessage>
             </FormControl>
           )}
-          <FormControl isRequired isInvalid={Boolean(errors.leaveDate)}>
+          <FormControl isRequired isInvalid={Boolean(errors.leaveDate)} mt={4}>
             <FormLabel htmlFor="leaveDate">Date</FormLabel>
             <Controller
               name="leaveDate"

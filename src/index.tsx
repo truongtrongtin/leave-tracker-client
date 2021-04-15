@@ -12,7 +12,9 @@ const config: ThemeConfig = {
 const theme = extendTheme({ config });
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
+  defaultOptions: {
+    queries: { refetchOnWindowFocus: false, retry: false },
+  },
 });
 
 ReactDOM.render(

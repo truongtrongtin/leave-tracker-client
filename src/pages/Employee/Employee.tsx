@@ -1,28 +1,14 @@
 import { SimpleGrid } from '@chakra-ui/react';
-import { User } from 'types/user';
 import EmployeeItem from 'components/EmployeeItem';
-import { useEffect, useState } from 'react';
+import { useQuery } from 'react-query';
 import { fetchData } from 'services/fetchData';
+import { User } from 'types/user';
 
 export default function Employee() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const getUsersQuery = useQuery<User[]>('users', () => fetchData('/users'));
+  const users = getUsersQuery.data || [];
 
-  useEffect(() => {
-    const getAllUsers = async () => {
-      try {
-        setIsLoading(true);
-        const users = await fetchData('/users');
-        setUsers(users);
-        setIsLoading(false);
-      } catch (error) {
-        setIsLoading(false);
-      }
-    };
-    getAllUsers();
-  }, []);
-
-  if (isLoading) return <div>Loading...</div>;
+  if (getUsersQuery.isLoading) return <div>Loading...</div>;
 
   return (
     <SimpleGrid columns={[1, 1, 2, 3, 4]} spacing="40px">

@@ -1,18 +1,18 @@
 export async function fetchData(endpoint: string, option?: RequestInit) {
-  const defaultOption: RequestInit = { credentials: "include", ...option };
+  const defaultOption: RequestInit = { credentials: 'include', ...option };
   let response;
   response = await fetch(
     process.env.REACT_APP_API_URL! + endpoint,
-    defaultOption
+    defaultOption,
   );
   if (response.status === 403) {
-    response = await fetch(process.env.REACT_APP_API_URL! + "/auth/refresh", {
-      credentials: "include",
+    response = await fetch(process.env.REACT_APP_API_URL! + '/auth/refresh', {
+      credentials: 'include',
     });
     if (response.ok) {
       response = await fetch(
         process.env.REACT_APP_API_URL! + endpoint,
-        defaultOption
+        defaultOption,
       );
     }
   }

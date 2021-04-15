@@ -68,9 +68,8 @@ export default function Dashboard() {
     fetchData('/users/dateOfBirth'),
   );
 
-  const getHolidaysQuery: any = useQuery('holidays', () =>
-    fetchData('/holidays'),
-  );
+  const getHolidaysQuery = useQuery('holidays', () => fetchData('/holidays'));
+  useQuery<User[]>('users', () => fetchData('/users'));
 
   const holidays =
     getHolidaysQuery.data?.map((item: any) => ({
