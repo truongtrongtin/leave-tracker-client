@@ -1,4 +1,5 @@
 import { Spinner } from '@chakra-ui/spinner';
+import AdminDashboardRoute from 'components/AdminDashboardRoute';
 import { AbilityContext } from 'components/Can';
 import DashboardRoute from 'components/DashboardRoute';
 import ability from 'config/ability';
@@ -47,9 +48,9 @@ function App() {
         <DashboardRoute path="/employees">
           <Employee />
         </DashboardRoute>
-        <DashboardRoute path="/statistics">
+        <AdminDashboardRoute path="/statistics">
           <Holiday />
-        </DashboardRoute>
+        </AdminDashboardRoute>
         <Route>Not Found!</Route>
       </Switch>
     </AbilityContext.Provider>

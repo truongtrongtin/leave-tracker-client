@@ -4,7 +4,7 @@ import { fetchData } from 'services/fetchData';
 
 export default function Statistic() {
   const getUsersLeavesCountQuery = useQuery('haha', () =>
-    fetchData(`/leaves/countUsersLeaves?year=${new Date().getFullYear()}`),
+    fetchData(`/leaves/getAllUsersLeaveSum?year=${new Date().getFullYear()}`),
   );
 
   return (

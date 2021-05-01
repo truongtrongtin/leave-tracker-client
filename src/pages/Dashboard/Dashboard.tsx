@@ -206,7 +206,7 @@ export default function Dashboard() {
         title:
           currentUser?.id === dateOfBirth.id
             ? 'Your birthday'
-            : `${dateOfBirth.firstName} 's birthday`,
+            : `${dateOfBirth.firstName} ${dateOfBirth.lastName} 's birthday`,
         resource: { ...dateOfBirth, type: 'dateOfBirth' },
       };
     });
@@ -218,7 +218,9 @@ export default function Dashboard() {
         start: new Date(leave.startAt),
         end: new Date(leave.endAt),
         title: `${
-          currentUser?.id === leave.user.id ? 'You' : leave.user.firstName
+          currentUser?.id === leave.user.id
+            ? 'You'
+            : `${leave.user.firstName} ${leave.user.lastName}`
         } (${generateDayPart(leave)})`,
         resource: { ...leave, type: 'leave' },
       };

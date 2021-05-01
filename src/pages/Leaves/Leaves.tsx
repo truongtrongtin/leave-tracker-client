@@ -1,4 +1,4 @@
-import { Box } from '@chakra-ui/react';
+import { Box, Text } from '@chakra-ui/react';
 import LDTable from 'components/LDTable/LDTable';
 import { useMemo } from 'react';
 import { useQuery } from 'react-query';
@@ -27,26 +27,33 @@ function Leaves() {
     placeholderData: { items: [], meta: {}, links: {} },
   });
 
+  const getMyLeaveSum = useQuery('myLeaveCount', () =>
+    fetchData('/leaves/getMyLeaveSum'),
+  );
+
+  const generateDayPart = (leave: Leave): string => {
+    const diffInHour =
+      Math.abs(
+        new Date(leave.startAt).getTime() - new Date(leave.endAt).getTime(),
+      ) / 3600000;
+
+    if (diffInHour === 5) return 'morning';
+    if (diffInHour === 4) return 'afternoon';
+    if (diffInHour === 9) return 'all day';
+    return 'unknown';
+  };
+
   const data = useMemo(
     () =>
       getLeavesQuery.data?.items.map((leave: Leave) => {
         return {
-          startAt: new Date(leave.startAt).toLocaleString(undefined, {
+          date: new Date(leave.startAt).toLocaleString(undefined, {
             hourCycle: 'h23',
             weekday: 'short',
             month: 'short',
             day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
           }),
-          endAt: new Date(leave.endAt).toLocaleString(undefined, {
-            hourCycle: 'h23',
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-          }),
+          dayPart: generateDayPart(leave),
           noOfDays: calculateLeaveDays(leave),
           reason: leave.reason,
         };
@@ -57,12 +64,12 @@ function Leaves() {
   const columns = useMemo(
     () => [
       {
-        Header: 'Start At',
-        accessor: 'startAt',
+        Header: 'Date',
+        accessor: 'date',
       },
       {
-        Header: 'End At',
-        accessor: 'endAt',
+        Header: 'Day part',
+        accessor: 'dayPart',
       },
       {
         Header: 'No Of Days',
@@ -79,6 +86,9 @@ function Leaves() {
   return (
     <Box>
       <LDTable data={data} columns={columns} />
+      <Text textAlign="center" mt={5}>
+        Total: {getMyLeaveSum.data?.sum} days
+      </Text>
     </Box>
   );
 }

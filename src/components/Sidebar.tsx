@@ -1,32 +1,42 @@
 import { Flex, Icon, Text } from '@chakra-ui/react';
 import { BiBarChart, BiCalendar, BiUser } from 'react-icons/bi';
 import { FaStreetView } from 'react-icons/fa';
+import { useQueryClient } from 'react-query';
+import { Role, User } from 'types/user';
 import AppLink from './AppLink';
 
-const sidebarItems = [
+const sidebarRoutes = [
   {
     icon: BiCalendar,
     name: 'Dashboard',
     href: '/dashboard',
+    accessRoles: [Role.MEMBER, Role.ADMIN],
   },
   {
     icon: FaStreetView,
     name: 'My Leaves',
     href: '/leaves',
+    accessRoles: [Role.MEMBER, Role.ADMIN],
   },
   {
     icon: BiUser,
     name: 'Employees',
     href: '/employees',
+    accessRoles: [Role.MEMBER, Role.ADMIN],
   },
   {
     icon: BiBarChart,
     name: 'Statistic',
     href: '/statistics',
+    accessRoles: [Role.ADMIN],
   },
 ];
 
 export default function Sidebar() {
+  const queryClient = useQueryClient();
+  const currentUser: User | undefined = queryClient.getQueryData('currentUser');
+
+  if (!currentUser) return null;
   return (
     <Flex
       direction="column"
@@ -36,23 +46,25 @@ export default function Sidebar() {
       boxShadow="base"
       overflow="auto"
     >
-      {sidebarItems.map((item, index) => (
-        <AppLink
-          key={index}
-          href={item.href}
-          activeStyle={{ backgroundColor: 'orange.400' }}
-          _hover={{ textDecoration: 'none' }}
-        >
-          <Flex
-            padding={3}
-            alignItems="center"
-            _hover={{ background: 'orange.400', textDecoration: 'none' }}
+      {sidebarRoutes
+        .filter((route) => route.accessRoles.includes(currentUser.role))
+        .map((route, index) => (
+          <AppLink
+            key={index}
+            href={route.href}
+            activeStyle={{ backgroundColor: 'orange.400' }}
+            _hover={{ textDecoration: 'none' }}
           >
-            <Icon as={item.icon} />
-            <Text marginLeft={4}>{item.name}</Text>
-          </Flex>
-        </AppLink>
-      ))}
+            <Flex
+              padding={3}
+              alignItems="center"
+              _hover={{ background: 'orange.400', textDecoration: 'none' }}
+            >
+              <Icon as={route.icon} />
+              <Text marginLeft={4}>{route.name}</Text>
+            </Flex>
+          </AppLink>
+        ))}
     </Flex>
   );
 }

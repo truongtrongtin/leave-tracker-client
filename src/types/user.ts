@@ -3,7 +3,7 @@ export enum Role {
   ADMIN = 'ADMIN',
 }
 
-export type User = {
+export interface User {
   id: string;
   email: string;
   firstName: string;
@@ -11,4 +11,4 @@ export type User = {
   role: Role;
   avatar: string;
   dateOfBirth?: Date;
-};
+}
