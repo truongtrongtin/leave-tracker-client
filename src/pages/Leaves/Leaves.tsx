@@ -1,18 +1,8 @@
 import { Box, Text } from '@chakra-ui/react';
+import { getMyLeavesApi, getMyLeaveSumApi, Leave } from 'api/leaves';
 import LDTable from 'components/LDTable/LDTable';
 import { useMemo } from 'react';
 import { useQuery } from 'react-query';
-import { fetchData } from 'services/fetchData';
-import { User } from 'types/user';
-
-export type Leave = {
-  id: string;
-  startAt: string;
-  endAt: string;
-  reason: string;
-  status: string;
-  user: User;
-};
 
 function calculateLeaveDays(leave: Leave): number {
   const diffInHour =
@@ -23,12 +13,12 @@ function calculateLeaveDays(leave: Leave): number {
 }
 
 function Leaves() {
-  const getLeavesQuery = useQuery('myLeaves', () => fetchData('/leaves/me'), {
+  const getLeavesQuery = useQuery('myLeaves', () => getMyLeavesApi(), {
     placeholderData: { items: [], meta: {}, links: {} },
   });
 
-  const getMyLeaveSum = useQuery('myLeaveCount', () =>
-    fetchData('/leaves/getMyLeaveSum'),
+  const getMyLeaveSumQuery: any = useQuery('myLeaveCount', () =>
+    getMyLeaveSumApi(),
   );
 
   const generateDayPart = (leave: Leave): string => {
@@ -45,7 +35,7 @@ function Leaves() {
 
   const data = useMemo(
     () =>
-      getLeavesQuery.data?.items.map((leave: Leave) => {
+      (getLeavesQuery.data?.items || []).map((leave: Leave) => {
         return {
           date: new Date(leave.startAt).toLocaleString(undefined, {
             hourCycle: 'h23',
@@ -87,7 +77,7 @@ function Leaves() {
     <Box>
       <LDTable data={data} columns={columns} />
       <Text textAlign="center" mt={5}>
-        Total: {getMyLeaveSum.data?.sum} days
+        Total: {getMyLeaveSumQuery.data?.sum} days
       </Text>
     </Box>
   );

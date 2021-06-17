@@ -17,14 +17,14 @@ import {
   Spacer,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { Leave } from 'api/leaves';
+import { Role, User } from 'api/users';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Controller, useForm } from 'react-hook-form';
 import { useQueryClient } from 'react-query';
-import { Role, User } from 'types/user';
 import * as yup from 'yup';
 import './date-picker.css';
-import { Leave } from './Leaves';
 
 type NewLeaveProps = {
   leave?: Leave;
@@ -42,6 +42,7 @@ export enum DayPart {
 }
 
 export type NewLeaveInputs = {
+  id: string;
   startAt: string;
   endAt: string;
   reason: string;
@@ -134,6 +135,7 @@ function NewLeave({
       endAt.setHours(18, 0, 0, 0);
     }
     onSubmit({
+      id: leave ? leave.id : '',
       startAt: startAt.toISOString(),
       endAt: endAt.toISOString(),
       reason,
@@ -146,7 +148,9 @@ function NewLeave({
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>
-          {isEditing ? `${leave?.user.firstName}'s leave` : 'Create Leave'}
+          {isEditing
+            ? `${leave?.user.firstName} ${leave?.user.lastName}'s leave`
+            : 'Create Leave'}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>

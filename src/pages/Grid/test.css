@@ -1,0 +1,7 @@
+.selected-range {
+  background-color: red;
+}
+
+.selected-cell {
+  background-color: green;
+}

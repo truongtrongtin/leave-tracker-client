@@ -14,15 +14,13 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { loginApi } from 'api/auth';
 import AppLink from 'components/AppLink';
 import PasswordInput from 'components/PasswordInput';
-import ability, { defineRulesFor } from 'config/ability';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from 'react-query';
-import { fetchData } from 'services/fetchData';
-import { User } from 'types/user';
-import { Redirect, useLocation } from 'wouter';
+import { useLocation } from 'wouter';
 import * as yup from 'yup';
 
 type LoginInputs = {
@@ -40,7 +38,6 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const currentUser: User | undefined = queryClient.getQueryData('currentUser');
   const {
     register,
     handleSubmit,
@@ -52,13 +49,8 @@ export default function Login() {
   const onSubmit = async ({ email, password }: LoginInputs) => {
     setIsLoading(true);
     try {
-      await fetchData('/auth/login', {
-        method: 'POST',
-        body: new URLSearchParams({ email, password }),
-      });
-      const user = await fetchData('/auth/me');
-      queryClient.setQueryData('currentUser', user);
-      ability.update(defineRulesFor(user));
+      const currentUser = await loginApi(email, password);
+      queryClient.setQueryData('currentUser', currentUser);
       setIsLoading(false);
       setError('');
       setLocation('/');
@@ -68,7 +60,6 @@ export default function Login() {
     }
   };
 
-  if (currentUser) return <Redirect to="/" />;
   return (
     <Flex align="center" height="100vh" justifyContent="center">
       <Box width="400px" p={8} borderWidth={1} borderRadius={8} boxShadow="lg">

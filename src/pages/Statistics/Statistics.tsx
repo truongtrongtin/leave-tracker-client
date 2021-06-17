@@ -1,10 +1,10 @@
 import { Text } from '@chakra-ui/layout';
+import { getAllUsersLeaveSumApi } from 'api/leaves';
 import { useQuery } from 'react-query';
-import { fetchData } from 'services/fetchData';
 
 export default function Statistic() {
   const getUsersLeavesCountQuery = useQuery('haha', () =>
-    fetchData(`/leaves/getAllUsersLeaveSum?year=${new Date().getFullYear()}`),
+    getAllUsersLeaveSumApi(new Date().getFullYear()),
   );
 
   return (

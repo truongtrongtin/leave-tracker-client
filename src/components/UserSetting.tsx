@@ -13,9 +13,9 @@ import {
   SimpleGrid,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { User } from 'api/users';
 import ReactDatePicker from 'react-datepicker';
 import { Controller, useForm } from 'react-hook-form';
-import { User } from 'types/user';
 import * as yup from 'yup';
 import PasswordInput from './PasswordInput';
 

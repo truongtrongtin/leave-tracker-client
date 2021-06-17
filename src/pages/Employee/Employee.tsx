@@ -1,11 +1,10 @@
 import { SimpleGrid } from '@chakra-ui/react';
+import { getAllUsersApi, User } from 'api/users';
 import EmployeeItem from 'components/EmployeeItem';
 import { useQuery } from 'react-query';
-import { fetchData } from 'services/fetchData';
-import { User } from 'types/user';
 
 export default function Employee() {
-  const getUsersQuery = useQuery<User[]>('users', () => fetchData('/users'));
+  const getUsersQuery = useQuery<User[]>('users', () => getAllUsersApi());
   const users = getUsersQuery.data || [];
 
   if (getUsersQuery.isLoading) return <div>Loading...</div>;

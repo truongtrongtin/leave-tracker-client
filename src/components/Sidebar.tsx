@@ -1,8 +1,8 @@
 import { Flex, Icon, Text } from '@chakra-ui/react';
+import { Role, User } from 'api/users';
 import { BiBarChart, BiCalendar, BiUser } from 'react-icons/bi';
 import { FaStreetView } from 'react-icons/fa';
 import { useQueryClient } from 'react-query';
-import { Role, User } from 'types/user';
 import AppLink from './AppLink';
 
 const sidebarRoutes = [

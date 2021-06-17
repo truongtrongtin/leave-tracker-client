@@ -6,41 +6,23 @@ import {
   useDisclosure,
   useToast,
 } from '@chakra-ui/react';
-import { format, getDay, parse, startOfWeek } from 'date-fns';
-import { Leave } from 'pages/Leaves/Leaves';
+import FullCalendar, { EventApi, EventInput } from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import {
+  addLeaveApi,
+  deleteLeaveApi,
+  editLeaveApi,
+  getAllLeavesApi,
+  Leave,
+  LeaveResponse,
+} from 'api/leaves';
+import { getAllHolidaysApi } from 'api/others';
+import { getAllUsersApi, getAllUsersBirthdayApi, User } from 'api/users';
 import NewLeave, { NewLeaveInputs } from 'pages/Leaves/NewLeave';
 import { useState } from 'react';
-import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-import { fetchData } from 'services/fetchData';
 import { DateOfBirth } from 'types/dateOfBirth';
-import { User } from 'types/user';
-
-const locales = {
-  'en-US': require('date-fns/locale/en-US'),
-};
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  locales,
-});
-
-type LeaveResponse = {
-  items: Leave[];
-  meta: object;
-  links: object;
-};
-
-type LeaveEvent = {
-  id: string;
-  start: Date;
-  end: Date;
-  title: string;
-  resource: any;
-};
+import './fullCalendar.css';
 
 export default function Dashboard() {
   const toast = useToast();
@@ -60,36 +42,23 @@ export default function Dashboard() {
     onClose: onCloseEdit,
   } = useDisclosure();
 
-  const getLeavesQuery = useQuery<LeaveResponse>('leaves', () =>
-    fetchData('/leaves'),
-  );
+  const getLeavesQuery = useQuery('leaves', () => getAllLeavesApi());
 
   const getDateOfBirthsQuery = useQuery('dateOfBirths', () =>
-    fetchData('/users/dateOfBirth'),
+    getAllUsersBirthdayApi(),
   );
 
-  const getHolidaysQuery = useQuery('holidays', () => fetchData('/holidays'));
-  useQuery<User[]>('users', () => fetchData('/users'));
-
-  const holidays =
-    getHolidaysQuery.data?.map((item: any) => ({
-      title: item.summary,
-      start: new Date(item.start.date),
-      end: new Date(item.start.date),
-      resource: { type: 'holiday' },
-    })) || [];
+  const getHolidaysQuery = useQuery('holidays', () => getAllHolidaysApi());
+  useQuery<User[]>('users', () => getAllUsersApi());
 
   const createLeaveMutation = useMutation(
     (newLeave: NewLeaveInputs) => {
       const { startAt, endAt, reason, userId } = newLeave;
-      return fetchData('/leaves/add', {
-        method: 'POST',
-        body: new URLSearchParams({
-          startAt,
-          endAt,
-          reason,
-          ...(userId && { userId: userId }),
-        }),
+      return addLeaveApi({
+        startAt,
+        endAt,
+        reason,
+        ...(userId && { userId }),
       });
     },
     {
@@ -108,15 +77,12 @@ export default function Dashboard() {
 
   const updateLeaveMutation = useMutation(
     (newLeave: NewLeaveInputs) => {
-      const { startAt, endAt, reason, userId } = newLeave;
-      return fetchData(`/leaves/${selectedLeave?.id}/edit`, {
-        method: 'POST',
-        body: new URLSearchParams({
-          startAt,
-          endAt,
-          reason,
-          ...(userId && { userId: userId }),
-        }),
+      const { id, startAt, endAt, reason, userId } = newLeave;
+      return editLeaveApi(id, {
+        startAt,
+        endAt,
+        reason,
+        ...(userId && { userId }),
       });
     },
     {
@@ -138,10 +104,7 @@ export default function Dashboard() {
   );
 
   const deleteLeaveMutation = useMutation(
-    (leaveId: string) =>
-      fetchData(`/leaves/${leaveId}/delete`, {
-        method: 'POST',
-      }),
+    (leaveId: string) => deleteLeaveApi(leaveId),
     {
       onSuccess: (_, leaveId) => {
         queryClient.setQueryData('leaves', (old: any) => {
@@ -160,9 +123,8 @@ export default function Dashboard() {
   );
 
   const getLeavesById = (leaveId: string): Leave => {
-    const leaveData: LeaveResponse | undefined = queryClient.getQueryData(
-      'leaves',
-    );
+    const leaveData: LeaveResponse | undefined =
+      queryClient.getQueryData('leaves');
     if (!leaveData) throw Error('no leaves found');
     const leave = leaveData.items.find((leave: Leave) => leave.id === leaveId);
     if (!leave) throw Error(`can not find leave ${leaveId}`);
@@ -174,9 +136,10 @@ export default function Dashboard() {
     onCloseEdit();
   };
 
-  const handleLeaveSelect = (leaveEvent: LeaveEvent) => {
-    if (leaveEvent.resource.type !== 'leave') return;
-    const leave = getLeavesById(leaveEvent.id);
+  const handleLeaveSelect = (event: EventApi) => {
+    const { type } = event._def.extendedProps;
+    if (type !== 'leaves') return;
+    const leave = getLeavesById(event._def.publicId);
     setSelectedLeave(leave);
     onOpenEdit();
   };
@@ -193,7 +156,7 @@ export default function Dashboard() {
     return 'unknown';
   };
 
-  const dateOfBirthEvents: LeaveEvent[] = (getDateOfBirthsQuery.data || [])
+  const dateOfBirthEvents = (getDateOfBirthsQuery.data || [])
     .filter((dateOfBirth: DateOfBirth) => dateOfBirth.dateOfBirth)
     .map((dateOfBirth: any) => {
       const thisYearDateOfBirth = new Date(dateOfBirth.dateOfBirth);
@@ -202,16 +165,15 @@ export default function Dashboard() {
       return {
         start: new Date(thisYearDateOfBirth),
         end: new Date(thisYearDateOfBirth),
-        allDay: true,
         title:
           currentUser?.id === dateOfBirth.id
             ? 'Your birthday'
             : `${dateOfBirth.firstName} ${dateOfBirth.lastName} 's birthday`,
-        resource: { ...dateOfBirth, type: 'dateOfBirth' },
+        type: 'birthdays',
       };
     });
 
-  const leaveEvents: LeaveEvent[] = (getLeavesQuery.data?.items || []).map(
+  const leaveEvents: EventInput[] = (getLeavesQuery.data?.items || []).map(
     (leave: Leave) => {
       return {
         id: leave.id,
@@ -222,36 +184,19 @@ export default function Dashboard() {
             ? 'You'
             : `${leave.user.firstName} ${leave.user.lastName}`
         } (${generateDayPart(leave)})`,
-        resource: { ...leave, type: 'leave' },
+        user: leave.user,
+        type: 'leaves',
       };
     },
   );
 
-  const customEventStyle = (leaveEvent: LeaveEvent) => {
-    if (leaveEvent.resource.type === 'dateOfBirth')
-      return {
-        style: {
-          backgroundColor: 'red',
-        },
-      };
-    if (leaveEvent.resource.type === 'holiday')
-      return {
-        style: {
-          backgroundColor: 'green',
-        },
-      };
-    if (leaveEvent.resource.type === 'leave') {
-      const leave = getLeavesById(leaveEvent.id);
-      if (leave?.user.id === currentUser?.id) {
-        return {
-          style: {
-            backgroundColor: 'blue',
-          },
-        };
-      }
-    }
-    return {};
-  };
+  const holidayEvents =
+    getHolidaysQuery.data?.map((item: any) => ({
+      title: item.summary,
+      start: new Date(item.start.date),
+      end: new Date(item.start.date),
+      resource: { type: 'holiday' },
+    })) || [];
 
   return (
     <Box height="100%">
@@ -260,14 +205,26 @@ export default function Dashboard() {
           Add Leave
         </Button>
       </Center>
-      <Box height="calc(100% - 40px)">
-        <Calendar
-          popup
-          views={['month']}
-          eventPropGetter={customEventStyle}
-          localizer={localizer}
-          events={[...leaveEvents, ...dateOfBirthEvents, ...holidays]}
-          onSelectEvent={handleLeaveSelect}
+      <Box height="100%">
+        <FullCalendar
+          height="100%"
+          eventClassNames="event"
+          eventClick={(eventInfo) => handleLeaveSelect(eventInfo.event)}
+          plugins={[dayGridPlugin]}
+          initialView="dayGridMonth"
+          eventSources={[
+            { events: leaveEvents, defaultAllDay: true },
+            {
+              events: dateOfBirthEvents,
+              backgroundColor: 'red',
+              defaultAllDay: true,
+            },
+            {
+              events: holidayEvents,
+              backgroundColor: 'green',
+              defaultAllDay: true,
+            },
+          ]}
         />
       </Box>
       <Modal isOpen={isOpenCreate} onClose={onCloseCreate}>

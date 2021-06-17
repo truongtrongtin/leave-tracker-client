@@ -15,11 +15,11 @@ import {
   Text,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { signupApi } from 'api/auth';
 import AppLink from 'components/AppLink';
 import PasswordInput from 'components/PasswordInput';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { fetchData } from 'services/fetchData';
 import { useLocation } from 'wouter';
 import * as yup from 'yup';
 
@@ -57,10 +57,7 @@ export default function Signup() {
   }: SignupInputs) => {
     setIsLoading(true);
     try {
-      await fetchData('/auth/signup', {
-        method: 'POST',
-        body: new URLSearchParams({ email, password, firstName, lastName }),
-      });
+      await signupApi(email, password, firstName, lastName);
       setIsLoading(false);
       setError('');
       setLocation('/login');

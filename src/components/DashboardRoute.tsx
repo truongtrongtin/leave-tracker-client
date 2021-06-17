@@ -1,7 +1,6 @@
 import { Box, Flex } from '@chakra-ui/react';
 import React from 'react';
 import { useQueryClient } from 'react-query';
-import { User } from 'types/user';
 import { Redirect, Route } from 'wouter';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -16,7 +15,7 @@ export default function DashboardRoute({
   children,
 }: DashboardRouteProps) {
   const queryClient = useQueryClient();
-  const currentUser: User | undefined = queryClient.getQueryData('currentUser');
+  const currentUser = queryClient.getQueryData('currentUser');
   const queryState = queryClient.getQueryState('currentUser');
 
   if (!currentUser && !queryState?.isFetching) return <Redirect to="/login" />;

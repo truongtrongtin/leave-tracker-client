@@ -11,12 +11,12 @@ import {
   useDisclosure,
   useToast,
 } from '@chakra-ui/react';
+import { logoutApi } from 'api/auth';
+import { editCurrentUser, User } from 'api/users';
 import logo from 'assets/icons/react.svg';
 import { FiSettings } from 'react-icons/fi';
 import { useMutation, useQueryClient } from 'react-query';
-import { fetchData } from 'services/fetchData';
 import { DateOfBirth } from 'types/dateOfBirth';
-import { User } from 'types/user';
 import { Link as RouteLink, useLocation } from 'wouter';
 import UserSetting, { NewUserSettings } from './UserSetting';
 
@@ -33,9 +33,7 @@ export default function Header() {
 
   const logout = async () => {
     try {
-      await fetchData('/auth/logout', {
-        method: 'POST',
-      });
+      await logoutApi();
       queryClient.removeQueries('currentUser');
       setLocation('/login');
     } catch (error) {
@@ -52,15 +50,12 @@ export default function Header() {
         newPassword,
         dateOfBirth,
       } = newUserSettings;
-      return fetchData('/users/edit/me', {
-        method: 'POST',
-        body: new URLSearchParams({
-          firstName,
-          lastName,
-          ...(password && { currentPassword: password }),
-          ...(newPassword && { newPassword }),
-          ...(dateOfBirth && { dateOfBirth: dateOfBirth.toISOString() }),
-        }),
+      return editCurrentUser({
+        firstName,
+        lastName,
+        ...(password && { currentPassword: password }),
+        ...(newPassword && { newPassword }),
+        ...(dateOfBirth && { dateOfBirth: dateOfBirth.toISOString() }),
       });
     },
     {
