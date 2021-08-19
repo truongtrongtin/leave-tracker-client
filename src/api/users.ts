@@ -23,6 +23,8 @@ export async function getAllUsersBirthdayApi(): Promise<any> {
   return await api.get('users/dateOfBirth').json();
 }
 
-export async function editCurrentUser(body: any): Promise<any> {
-  return await api.post('users/dateOfBirth').json();
+export async function editCurrentUserApi(body: any): Promise<any> {
+  return await api
+    .post('users/edit/me', { body: new URLSearchParams(body) })
+    .json();
 }

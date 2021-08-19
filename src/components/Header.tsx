@@ -12,8 +12,9 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { logoutApi } from 'api/auth';
-import { editCurrentUser, User } from 'api/users';
+import { editCurrentUserApi, User } from 'api/users';
 import logo from 'assets/icons/react.svg';
+import { useState } from 'react';
 import { FiSettings } from 'react-icons/fi';
 import { useMutation, useQueryClient } from 'react-query';
 import { DateOfBirth } from 'types/dateOfBirth';
@@ -29,28 +30,28 @@ export default function Header() {
     onOpen: onOpenUserSetting,
     onClose: onCloseUserSetting,
   } = useDisclosure();
+  const [isLoading, setIsloading] = useState(false);
   const currentUser: User | undefined = queryClient.getQueryData('currentUser');
 
   const logout = async () => {
     try {
+      setIsloading(true);
       await logoutApi();
+      setIsloading(false);
       queryClient.removeQueries('currentUser');
       setLocation('/login');
     } catch (error) {
+      setIsloading(false);
       console.log(error);
     }
   };
 
   const updateCurrentUserMutation = useMutation(
     (newUserSettings: NewUserSettings) => {
-      const {
-        firstName,
-        lastName,
-        password,
-        newPassword,
-        dateOfBirth,
-      } = newUserSettings;
-      return editCurrentUser({
+      const { firstName, lastName, password, newPassword, dateOfBirth } =
+        newUserSettings;
+      console.log('newUserSettings', newUserSettings);
+      return editCurrentUserApi({
         firstName,
         lastName,
         ...(password && { currentPassword: password }),
@@ -113,7 +114,9 @@ export default function Header() {
         aria-label="Toggle sidebar"
         icon={<FiSettings />}
       />
-      <Button onClick={logout}>Log out</Button>
+      <Button onClick={logout} isLoading={isLoading}>
+        Log out
+      </Button>
       {currentUser && (
         <Modal isOpen={isOpenUserSetting} onClose={onCloseUserSetting}>
           <UserSetting

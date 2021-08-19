@@ -62,7 +62,7 @@ export default function Signup() {
       setError('');
       setLocation('/login');
     } catch (error) {
-      setError(error.message);
+      if (error instanceof Error) setError(error.message);
       setIsLoading(false);
     }
   };

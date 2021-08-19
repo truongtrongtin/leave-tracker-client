@@ -22,6 +22,7 @@ import { useForm } from 'react-hook-form';
 import { useQueryClient } from 'react-query';
 import { useLocation } from 'wouter';
 import * as yup from 'yup';
+import { FcGoogle } from 'react-icons/fc';
 
 type LoginInputs = {
   email: string;
@@ -55,7 +56,7 @@ export default function Login() {
       setError('');
       setLocation('/');
     } catch (error) {
-      setError(error.message);
+      if (error instanceof Error) setError(error.message);
       setIsLoading(false);
     }
   };
@@ -96,6 +97,17 @@ export default function Login() {
               ) : (
                 'Sign in'
               )}
+            </Button>
+            <Button
+              as="a"
+              leftIcon={<FcGoogle />}
+              width="full"
+              variant="outline"
+              type="submit"
+              mt={8}
+              href={`${process.env.REACT_APP_API_URL}/auth/google`}
+            >
+              Sign in with Google
             </Button>
           </form>
         </Box>
