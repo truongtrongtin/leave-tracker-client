@@ -10,7 +10,7 @@ export default function Employee() {
   if (getUsersQuery.isLoading) return <div>Loading...</div>;
 
   return (
-    <SimpleGrid columns={[1, 1, 2, 3, 4]} spacing="40px">
+    <SimpleGrid columns={[1, 2, 3, 4, 5]} spacing="40px">
       {users.map((user) => {
         const name = user.firstName + ' ' + user.lastName;
         return <EmployeeItem key={user.id} name={name} avatar={user.avatar} />;

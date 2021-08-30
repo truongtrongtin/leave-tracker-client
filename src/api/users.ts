@@ -28,3 +28,7 @@ export async function editCurrentUserApi(body: any): Promise<any> {
     .post('users/edit/me', { body: new URLSearchParams(body) })
     .json();
 }
+
+export async function deleteCurrentUserApi(userId: string): Promise<any> {
+  return await api.post(`users/${userId}/delete`);
+}

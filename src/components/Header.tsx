@@ -12,18 +12,17 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { logoutApi } from 'api/auth';
-import { editCurrentUserApi, User } from 'api/users';
+import { deleteCurrentUserApi, editCurrentUserApi, User } from 'api/users';
 import logo from 'assets/icons/react.svg';
 import { useState } from 'react';
 import { FiSettings } from 'react-icons/fi';
 import { useMutation, useQueryClient } from 'react-query';
 import { DateOfBirth } from 'types/dateOfBirth';
-import { Link as RouteLink, useLocation } from 'wouter';
+import { Link as RouteLink } from 'wouter';
 import UserSetting, { NewUserSettings } from './UserSetting';
 
 export default function Header() {
   const toast = useToast();
-  const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const {
     isOpen: isOpenUserSetting,
@@ -38,19 +37,17 @@ export default function Header() {
       setIsloading(true);
       await logoutApi();
       setIsloading(false);
-      queryClient.removeQueries('currentUser');
-      setLocation('/login');
     } catch (error) {
       setIsloading(false);
       console.log(error);
     }
+    queryClient.setQueryData('currentUser', undefined);
   };
 
   const updateCurrentUserMutation = useMutation(
     (newUserSettings: NewUserSettings) => {
       const { firstName, lastName, password, newPassword, dateOfBirth } =
         newUserSettings;
-      console.log('newUserSettings', newUserSettings);
       return editCurrentUserApi({
         firstName,
         lastName,
@@ -73,6 +70,22 @@ export default function Header() {
         });
         onCloseUserSetting();
         toast({ description: 'Successfully updated', status: 'success' });
+      },
+      onError: (error: Error) => {
+        toast({ description: error.message, status: 'error' });
+      },
+    },
+  );
+
+  const deleteCurrentUserMutation = useMutation(
+    (userId: string) => {
+      return deleteCurrentUserApi(userId);
+    },
+    {
+      onSuccess: () => {
+        logoutApi();
+        queryClient.setQueryData('currentUser', undefined);
+        toast({ description: 'Successfully deleted', status: 'success' });
       },
       onError: (error: Error) => {
         toast({ description: error.message, status: 'error' });
@@ -124,8 +137,12 @@ export default function Header() {
             onSubmit={(newUserSettings) =>
               updateCurrentUserMutation.mutate(newUserSettings)
             }
+            onDelete={(userId) => deleteCurrentUserMutation.mutate(userId)}
             user={currentUser}
-            isLoading={updateCurrentUserMutation.isLoading}
+            isLoading={
+              updateCurrentUserMutation.isLoading ||
+              deleteCurrentUserMutation.isLoading
+            }
           />
         </Modal>
       )}

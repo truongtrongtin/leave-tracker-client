@@ -20,7 +20,6 @@ import PasswordInput from 'components/PasswordInput';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useQueryClient } from 'react-query';
-import { useLocation } from 'wouter';
 import * as yup from 'yup';
 import { FcGoogle } from 'react-icons/fc';
 
@@ -37,7 +36,6 @@ const loginSchema = yup.object().shape({
 export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const {
     register,
@@ -54,7 +52,6 @@ export default function Login() {
       queryClient.setQueryData('currentUser', currentUser);
       setIsLoading(false);
       setError('');
-      setLocation('/');
     } catch (error) {
       if (error instanceof Error) setError(error.message);
       setIsLoading(false);

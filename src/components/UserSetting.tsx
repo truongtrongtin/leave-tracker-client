@@ -11,6 +11,7 @@ import {
   ModalHeader,
   ModalOverlay,
   SimpleGrid,
+  Spacer,
 } from '@chakra-ui/react';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { User } from 'api/users';
@@ -24,6 +25,7 @@ type UserSettingProps = {
   onClose: () => void;
   isLoading: boolean;
   onSubmit: (newUserSettings: NewUserSettings) => void;
+  onDelete: (userId: string) => void;
 };
 
 export type NewUserSettings = {
@@ -41,7 +43,13 @@ const userSettingSchema = yup.object().shape({
   newPassword: yup.string().notRequired(),
 });
 
-function UserSetting({ user, onClose, isLoading, onSubmit }: UserSettingProps) {
+function UserSetting({
+  user,
+  onClose,
+  isLoading,
+  onSubmit,
+  onDelete,
+}: UserSettingProps) {
   const {
     register,
     handleSubmit,
@@ -117,6 +125,15 @@ function UserSetting({ user, onClose, isLoading, onSubmit }: UserSettingProps) {
           </SimpleGrid>
         </ModalBody>
         <ModalFooter>
+          <Button
+            colorScheme="red"
+            mr={3}
+            onClick={() => onDelete(user.id)}
+            isLoading={isLoading}
+          >
+            Delete
+          </Button>
+          <Spacer />
           <Button mr={3} onClick={onClose}>
             Close
           </Button>
