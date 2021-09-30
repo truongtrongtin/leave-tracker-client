@@ -23,7 +23,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Controller, useForm } from 'react-hook-form';
 import { useQueryClient } from 'react-query';
-import * as yup from 'yup';
+import { AnyObjectSchema, date, object, string } from 'yup';
 import './date-picker.css';
 
 type NewLeaveProps = {
@@ -56,11 +56,11 @@ export type FormFields = {
   reason: string;
 };
 
-const newLeaveSchema = yup.object().shape({
-  userId: yup.string().notRequired(),
-  leaveDate: yup.date().required(),
-  dayPart: yup.string().required(),
-  reason: yup.string(),
+const newLeaveSchema: AnyObjectSchema = object().shape({
+  userId: string().notRequired(),
+  leaveDate: date().required(),
+  dayPart: string().required(),
+  reason: string().notRequired(),
 });
 
 const getCurrentBusinessDay = () => {
@@ -157,7 +157,11 @@ function NewLeave({
           {isAdmin && (
             <FormControl isInvalid={Boolean(errors.userId)}>
               <FormLabel htmlFor="userId">User</FormLabel>
-              <Select {...register('userId')} placeholder="Select option">
+              <Select
+                id="userId"
+                {...register('userId')}
+                placeholder="Select option"
+              >
                 {(users || []).map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.firstName} {user.lastName}
@@ -174,6 +178,7 @@ function NewLeave({
               control={control}
               render={({ field: { value, onChange } }) => (
                 <DatePicker
+                  id="leaveDate"
                   selected={value}
                   onChange={onChange}
                   dateFormat="E MMM d, yyyy"
@@ -214,7 +219,7 @@ function NewLeave({
           </FormControl>
           <FormControl isInvalid={Boolean(errors.reason)} mt={4}>
             <FormLabel htmlFor="reason">Reason (optional)</FormLabel>
-            <Input {...register('reason')} />
+            <Input id="reason" {...register('reason')} />
             <FormErrorMessage>{errors.reason?.message}</FormErrorMessage>
           </FormControl>
         </ModalBody>

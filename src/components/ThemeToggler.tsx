@@ -1,4 +1,4 @@
-import { useColorMode, Box, IconButton } from '@chakra-ui/react';
+import { Box, IconButton, useColorMode } from '@chakra-ui/react';
 import { FaMoon, FaRegSun } from 'react-icons/fa';
 
 export default function ThemeToggler() {

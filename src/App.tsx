@@ -1,21 +1,34 @@
+import { Box } from '@chakra-ui/react';
 import { Spinner } from '@chakra-ui/spinner';
-import { getMeApi } from 'api/auth';
+import { getMeApi } from 'api/users';
 import AdminDashboardRoute from 'components/AdminDashboardRoute';
 import DashboardRoute from 'components/DashboardRoute';
+import LoggedOutRoute from 'components/LoggedOutRoute';
 import Dashboard from 'pages/Dashboard';
 import Employee from 'pages/Employee';
 import Leaves from 'pages/Leaves';
 import Login from 'pages/Login';
+import Profile from 'pages/Profile';
 import Signup from 'pages/Signup';
 import Holiday from 'pages/Statistics';
+import { useEffect } from 'react';
 // import Test from 'pages/Grid';
 import { useQuery } from 'react-query';
 import { Redirect, Route, Switch } from 'wouter';
-import { Box } from '@chakra-ui/react';
-import LoggedOutRoute from 'components/LoggedOutRoute';
 
 function App() {
   const { isLoading } = useQuery('currentUser', () => getMeApi());
+
+  useEffect(() => {
+    const websocket = new WebSocket(process.env.REACT_APP_SOCKET_URL!);
+    websocket.onopen = () => {
+      console.log('connected');
+    };
+
+    return () => {
+      websocket.close();
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -39,6 +52,9 @@ function App() {
       <Route path="/">
         <Redirect to="/dashboard" />
       </Route>
+      <DashboardRoute path="/profile">
+        <Profile />
+      </DashboardRoute>
       <DashboardRoute path="/dashboard">
         <Dashboard />
       </DashboardRoute>

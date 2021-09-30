@@ -21,7 +21,7 @@ import PasswordInput from 'components/PasswordInput';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation } from 'wouter';
-import * as yup from 'yup';
+import { object, SchemaOf, string } from 'yup';
 
 type SignupInputs = {
   email: string;
@@ -30,11 +30,11 @@ type SignupInputs = {
   lastName: string;
 };
 
-const signupSchema = yup.object().shape({
-  email: yup.string().required().email(),
-  password: yup.string().required(),
-  firstName: yup.string().required(),
-  lastName: yup.string().required(),
+const signupSchema: SchemaOf<SignupInputs> = object().shape({
+  email: string().required().email(),
+  password: string().required(),
+  firstName: string().required(),
+  lastName: string().required(),
 });
 
 export default function Signup() {
@@ -84,23 +84,28 @@ export default function Signup() {
             <SimpleGrid columns={2} spacing={2}>
               <FormControl isRequired isInvalid={Boolean(errors.firstName)}>
                 <FormLabel htmlFor="firstName">First name</FormLabel>
-                <Input autoFocus type="text" {...register('firstName')} />
+                <Input
+                  autoFocus
+                  id="firstName"
+                  type="text"
+                  {...register('firstName')}
+                />
                 <FormErrorMessage>{errors.firstName?.message}</FormErrorMessage>
               </FormControl>
               <FormControl isRequired isInvalid={Boolean(errors.lastName)}>
                 <FormLabel htmlFor="lastName">Last name</FormLabel>
-                <Input type="text" {...register('lastName')} />
+                <Input type="text" id="lastName" {...register('lastName')} />
                 <FormErrorMessage>{errors.lastName?.message}</FormErrorMessage>
               </FormControl>
             </SimpleGrid>
             <FormControl isRequired isInvalid={Boolean(errors.email)} mt={4}>
               <FormLabel htmlFor="email">Email</FormLabel>
-              <Input type="email" {...register('email')} />
+              <Input type="email" id="email" {...register('email')} />
               <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
             </FormControl>
             <FormControl isRequired isInvalid={Boolean(errors.password)} mt={4}>
               <FormLabel htmlFor="password">Password</FormLabel>
-              <PasswordInput {...register('password')} />
+              <PasswordInput id="password" {...register('password')} />
               <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
             </FormControl>
             <Button

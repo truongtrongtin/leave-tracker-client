@@ -19,18 +19,18 @@ import AppLink from 'components/AppLink';
 import PasswordInput from 'components/PasswordInput';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useQueryClient } from 'react-query';
-import * as yup from 'yup';
 import { FcGoogle } from 'react-icons/fc';
+import { useQueryClient } from 'react-query';
+import { object, SchemaOf, string } from 'yup';
 
 type LoginInputs = {
   email: string;
   password: string;
 };
 
-const loginSchema = yup.object().shape({
-  email: yup.string().required().email(),
-  password: yup.string().required(),
+const loginSchema: SchemaOf<LoginInputs> = object().shape({
+  email: string().required().email(),
+  password: string().required(),
 });
 
 export default function Login() {
@@ -41,7 +41,7 @@ export default function Login() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<LoginInputs>({
     resolver: yupResolver(loginSchema),
   });
 
@@ -74,12 +74,12 @@ export default function Login() {
             )}
             <FormControl isRequired isInvalid={Boolean(errors.email)}>
               <FormLabel htmlFor="email">Email</FormLabel>
-              <Input autoFocus type="email" {...register('email')} />
+              <Input autoFocus id="email" type="email" {...register('email')} />
               <FormErrorMessage>{errors.email?.message}</FormErrorMessage>
             </FormControl>
             <FormControl isRequired isInvalid={Boolean(errors.password)} mt={6}>
               <FormLabel htmlFor="password">Password</FormLabel>
-              <PasswordInput {...register('password')} />
+              <PasswordInput id="password" {...register('password')} />
               <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
             </FormControl>
             <Button

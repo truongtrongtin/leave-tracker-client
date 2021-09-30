@@ -19,14 +19,28 @@ export async function getAllUsersApi(): Promise<any> {
   return await api.get('users').json();
 }
 
+export async function getMeApi() {
+  return await api.get('users/me').json();
+}
+
 export async function getAllUsersBirthdayApi(): Promise<any> {
   return await api.get('users/dateOfBirth').json();
 }
 
 export async function editCurrentUserApi(body: any): Promise<any> {
   return await api
-    .post('users/edit/me', { body: new URLSearchParams(body) })
+    .post('users/me/update', { body: new URLSearchParams(body) })
     .json();
+}
+
+export async function updateCurrentUserPasswordApi(body: any): Promise<any> {
+  return await api
+    .post('users/me/updatePassword', { body: new URLSearchParams(body) })
+    .json();
+}
+
+export async function editCurrentUserAvatarApi(body: any): Promise<any> {
+  return await api.post('users/me/updateAvatar', { body }).json();
 }
 
 export async function deleteCurrentUserApi(userId: string): Promise<any> {

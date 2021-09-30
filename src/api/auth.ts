@@ -24,7 +24,3 @@ export async function loginApi(email: string, password: string) {
 export async function logoutApi() {
   return await api.post('auth/logout');
 }
-
-export async function getMeApi() {
-  return await api.get('auth/me').json();
-}

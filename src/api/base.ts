@@ -23,6 +23,10 @@ export const api = ky.create({
           await refreshToken();
           return ky(request);
         }
+        if (response.status > 300) {
+          const body = await response.json();
+          throw new Error(body.message);
+        }
       },
     ],
   },

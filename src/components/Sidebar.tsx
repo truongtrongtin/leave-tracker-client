@@ -1,7 +1,11 @@
 import { Flex, Icon, Text } from '@chakra-ui/react';
 import { Role, User } from 'api/users';
-import { BiBarChart, BiCalendar, BiUser } from 'react-icons/bi';
-import { FaStreetView } from 'react-icons/fa';
+import {
+  BiBarChart,
+  BiCalendar,
+  BiGroup,
+  BiCalendarCheck,
+} from 'react-icons/bi';
 import { useQueryClient } from 'react-query';
 import AppLink from './AppLink';
 
@@ -13,13 +17,13 @@ const sidebarRoutes = [
     accessRoles: [Role.MEMBER, Role.ADMIN],
   },
   {
-    icon: FaStreetView,
+    icon: BiCalendarCheck,
     name: 'My Leaves',
     href: '/leaves',
     accessRoles: [Role.MEMBER, Role.ADMIN],
   },
   {
-    icon: BiUser,
+    icon: BiGroup,
     name: 'Employees',
     href: '/employees',
     accessRoles: [Role.MEMBER, Role.ADMIN],
