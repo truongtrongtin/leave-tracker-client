@@ -1,4 +1,5 @@
-import React from 'react';
+import { AppContext } from 'contexts/AppContext';
+import React, { useContext } from 'react';
 import { useQueryClient } from 'react-query';
 import { Redirect, Route } from 'wouter';
 
@@ -11,9 +12,10 @@ export default function LoggedOutRoute({
   path,
   children,
 }: LoggedOutRouteProps) {
+  const { intendedRoute } = useContext(AppContext);
   const queryClient = useQueryClient();
   const currentUser = queryClient.getQueryData('currentUser');
 
-  if (currentUser) return <Redirect to="/" />;
+  if (currentUser) return <Redirect to={intendedRoute || '/'} />;
   return <Route path={path}>{children}</Route>;
 }

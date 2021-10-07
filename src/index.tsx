@@ -1,4 +1,5 @@
 import { ChakraProvider, extendTheme, ThemeConfig } from '@chakra-ui/react';
+import AppContextProvider from 'contexts/AppContext';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -21,7 +22,9 @@ ReactDOM.render(
   <React.StrictMode>
     <ChakraProvider theme={theme}>
       <QueryClientProvider client={queryClient}>
-        <App />
+        <AppContextProvider>
+          <App />
+        </AppContextProvider>
       </QueryClientProvider>
     </ChakraProvider>
   </React.StrictMode>,

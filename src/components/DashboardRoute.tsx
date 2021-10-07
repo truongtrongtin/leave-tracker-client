@@ -1,7 +1,8 @@
 import { Box, Flex } from '@chakra-ui/react';
-import React from 'react';
+import { AppContext } from 'contexts/AppContext';
+import React, { useContext, useEffect } from 'react';
 import { useQueryClient } from 'react-query';
-import { Redirect, Route } from 'wouter';
+import { Redirect, Route, useLocation } from 'wouter';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
@@ -14,11 +15,23 @@ export default function DashboardRoute({
   path,
   children,
 }: DashboardRouteProps) {
+  const [location] = useLocation();
+  const { intendedRoute, setIntendedRoute } = useContext(AppContext);
   const queryClient = useQueryClient();
   const currentUser = queryClient.getQueryData('currentUser');
   const queryState = queryClient.getQueryState('currentUser');
 
-  if (!currentUser && !queryState?.isFetching) return <Redirect to="/login" />;
+  useEffect(() => {
+    if (!currentUser && !queryState?.isFetching) {
+      location !== intendedRoute
+        ? setIntendedRoute(location)
+        : setIntendedRoute('');
+    }
+  }, [currentUser, queryState, location, intendedRoute, setIntendedRoute]);
+
+  if (!currentUser && !queryState?.isFetching) {
+    return <Redirect to="/login" />;
+  }
 
   return (
     <Route path={path}>

@@ -26,10 +26,10 @@ export default function Header() {
   const logout = async () => {
     try {
       await logoutApi();
+      queryClient.setQueryData('currentUser', undefined);
     } catch (error) {
       console.log(error);
     }
-    queryClient.setQueryData('currentUser', undefined);
   };
 
   if (!currentUser) return null;
