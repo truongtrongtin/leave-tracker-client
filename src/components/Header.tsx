@@ -1,5 +1,6 @@
 import {
   Avatar,
+  Box,
   Flex,
   HStack,
   Image,
@@ -56,20 +57,22 @@ export default function Header() {
       </Flex>
       <Spacer />
       <ThemeToggler />
-      <Menu>
-        <MenuButton>
-          <Avatar
-            name={currentUser.firstName}
-            src={currentUser.avatar}
-            size="sm"
-          />
-        </MenuButton>
-        <MenuList minWidth="fit-content">
-          <MenuItem onClick={() => setLocation('/profile')}>Profile</MenuItem>
-          <MenuDivider />
-          <MenuItem onClick={logout}>Log out</MenuItem>
-        </MenuList>
-      </Menu>
+      <Box>
+        <Menu>
+          <MenuButton>
+            <Avatar
+              name={currentUser.firstName}
+              src={currentUser.avatar}
+              size="sm"
+            />
+          </MenuButton>
+          <MenuList minWidth="fit-content">
+            <MenuItem onClick={() => setLocation('/profile')}>Profile</MenuItem>
+            <MenuDivider />
+            <MenuItem onClick={logout}>Log out</MenuItem>
+          </MenuList>
+        </Menu>
+      </Box>
     </HStack>
   );
 }

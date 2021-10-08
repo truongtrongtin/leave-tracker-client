@@ -17,7 +17,8 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { loginApi } from 'api/auth';
 import AppLink from 'components/AppLink';
 import PasswordInput from 'components/PasswordInput';
-import { useState } from 'react';
+import { AppContext } from 'contexts/AppContext';
+import { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FcGoogle } from 'react-icons/fc';
 import { useQueryClient } from 'react-query';
@@ -34,6 +35,7 @@ const loginSchema: SchemaOf<LoginInputs> = object().shape({
 });
 
 export default function Login() {
+  const { intendedRoute } = useContext(AppContext);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
@@ -102,7 +104,7 @@ export default function Login() {
               variant="outline"
               type="submit"
               mt={8}
-              href={`${process.env.REACT_APP_API_URL}/auth/google`}
+              href={`${process.env.REACT_APP_API_URL}/auth/google?intended_url=${window.location.origin}${intendedRoute}`}
             >
               Sign in with Google
             </Button>

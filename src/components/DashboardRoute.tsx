@@ -16,18 +16,16 @@ export default function DashboardRoute({
   children,
 }: DashboardRouteProps) {
   const [location] = useLocation();
-  const { intendedRoute, setIntendedRoute } = useContext(AppContext);
+  const { setIntendedRoute } = useContext(AppContext);
   const queryClient = useQueryClient();
   const currentUser = queryClient.getQueryData('currentUser');
   const queryState = queryClient.getQueryState('currentUser');
 
   useEffect(() => {
     if (!currentUser && !queryState?.isFetching) {
-      location !== intendedRoute
-        ? setIntendedRoute(location)
-        : setIntendedRoute('');
+      setIntendedRoute(location);
     }
-  }, [currentUser, queryState, location, intendedRoute, setIntendedRoute]);
+  }, [currentUser, queryState, location, setIntendedRoute]);
 
   if (!currentUser && !queryState?.isFetching) {
     return <Redirect to="/login" />;
