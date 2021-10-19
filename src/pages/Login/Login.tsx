@@ -21,6 +21,7 @@ import { AppContext } from 'contexts/AppContext';
 import { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FcGoogle } from 'react-icons/fc';
+import { FaGithub } from 'react-icons/fa';
 import { useQueryClient } from 'react-query';
 import { object, SchemaOf, string } from 'yup';
 
@@ -107,6 +108,17 @@ export default function Login() {
               href={`${process.env.REACT_APP_API_URL}/auth/google?intended_url=${window.location.origin}${intendedRoute}`}
             >
               Sign in with Google
+            </Button>
+            <Button
+              as="a"
+              leftIcon={<FaGithub />}
+              width="full"
+              variant="outline"
+              type="submit"
+              mt={2}
+              href={`${process.env.REACT_APP_API_URL}/auth/github?intended_url=${window.location.origin}${intendedRoute}`}
+            >
+              Sign in with Github
             </Button>
           </form>
         </Box>
