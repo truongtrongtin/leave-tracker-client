@@ -30,6 +30,19 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    // remove facebook redirect fragment
+    if (window.location.hash === '#_=_') {
+      window.history.replaceState
+        ? window.history.replaceState(
+            '',
+            '',
+            window.location.href.split('#')[0],
+          )
+        : (window.location.hash = '');
+    }
+  }, []);
+
   if (isLoading) {
     return (
       <Spinner

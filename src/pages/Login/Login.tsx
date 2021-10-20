@@ -18,10 +18,10 @@ import { loginApi } from 'api/auth';
 import AppLink from 'components/AppLink';
 import PasswordInput from 'components/PasswordInput';
 import { AppContext } from 'contexts/AppContext';
+import { useQueryParams } from 'hooks/useQueryParams';
 import { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { FcGoogle } from 'react-icons/fc';
-import { FaGithub } from 'react-icons/fa';
+import { FaFacebook, FaGithub, FaGoogle } from 'react-icons/fa';
 import { useQueryClient } from 'react-query';
 import { object, SchemaOf, string } from 'yup';
 
@@ -36,10 +36,11 @@ const loginSchema: SchemaOf<LoginInputs> = object().shape({
 });
 
 export default function Login() {
-  const { intendedRoute } = useContext(AppContext);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const params = useQueryParams();
   const queryClient = useQueryClient();
+  const { intendedRoute } = useContext(AppContext);
+  const [error, setError] = useState(params['error']);
+  const [isLoading, setIsLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -100,7 +101,7 @@ export default function Login() {
             </Button>
             <Button
               as="a"
-              leftIcon={<FcGoogle />}
+              leftIcon={<FaGoogle />}
               width="full"
               variant="outline"
               type="submit"
@@ -108,6 +109,17 @@ export default function Login() {
               href={`${process.env.REACT_APP_API_URL}/auth/google?intended_url=${window.location.origin}${intendedRoute}`}
             >
               Sign in with Google
+            </Button>
+            <Button
+              as="a"
+              leftIcon={<FaFacebook />}
+              width="full"
+              variant="outline"
+              type="submit"
+              mt={2}
+              href={`${process.env.REACT_APP_API_URL}/auth/facebook?intended_url=${window.location.origin}${intendedRoute}`}
+            >
+              Sign in with Facebook
             </Button>
             <Button
               as="a"

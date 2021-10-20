@@ -20,13 +20,13 @@ const queryClient = new QueryClient({
 
 ReactDOM.render(
   <React.StrictMode>
-    <ChakraProvider theme={theme}>
-      <QueryClientProvider client={queryClient}>
-        <AppContextProvider>
+    <QueryClientProvider client={queryClient}>
+      <AppContextProvider>
+        <ChakraProvider theme={theme}>
           <App />
-        </AppContextProvider>
-      </QueryClientProvider>
-    </ChakraProvider>
+        </ChakraProvider>
+      </AppContextProvider>
+    </QueryClientProvider>
   </React.StrictMode>,
   document.getElementById('root'),
 );
