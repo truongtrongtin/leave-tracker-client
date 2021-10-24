@@ -6,29 +6,37 @@ import {
   useDisclosure,
   useToast,
 } from '@chakra-ui/react';
-import FullCalendar, { EventApi, EventInput } from '@fullcalendar/react';
+import FullCalendar, {
+  EventApi,
+  EventClickArg,
+  EventSourceFunc,
+} from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import {
   addLeaveApi,
   deleteLeaveApi,
   editLeaveApi,
-  getAllLeavesApi,
+  getLeavesApi,
   Leave,
-  LeaveResponse,
 } from 'api/leaves';
 import { getAllHolidaysApi } from 'api/others';
 import { getAllUsersApi, getAllUsersBirthdayApi, User } from 'api/users';
-import NewLeave, { NewLeaveInputs } from 'pages/Leaves/NewLeave';
-import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import NewLeave from 'pages/Leaves/NewLeave';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from 'react-query';
 import { DateOfBirth } from 'types/dateOfBirth';
 import './fullCalendar.css';
 
 export default function Dashboard() {
   const toast = useToast();
   const queryClient = useQueryClient();
+  const calendarRef = useRef<FullCalendar>(null);
   const currentUser: User | undefined = queryClient.getQueryData('currentUser');
-  const [selectedLeave, setSelectedLeave] = useState<Leave | null>(null);
+  const users: User[] | undefined = queryClient.getQueryData('users');
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedLeaveEvent, setSelectedLeaveEvent] = useState<EventApi | null>(
+    null,
+  );
 
   const {
     isOpen: isOpenCreate,
@@ -42,8 +50,6 @@ export default function Dashboard() {
     onClose: onCloseEdit,
   } = useDisclosure();
 
-  const getLeavesQuery = useQuery('leaves', () => getAllLeavesApi());
-
   const getDateOfBirthsQuery = useQuery('dateOfBirths', () =>
     getAllUsersBirthdayApi(),
   );
@@ -51,96 +57,102 @@ export default function Dashboard() {
   const getHolidaysQuery = useQuery('holidays', () => getAllHolidaysApi());
   useQuery<User[]>('users', () => getAllUsersApi());
 
-  const createLeaveMutation = useMutation(
-    (newLeave: NewLeaveInputs) => {
-      const { startAt, endAt, reason, userId } = newLeave;
-      return addLeaveApi({
+  const createLeave = async (leave: Leave) => {
+    const { startAt, endAt, reason, user } = leave;
+    setIsLoading(true);
+    try {
+      const newLeave = await addLeaveApi({
         startAt,
         endAt,
         reason,
-        ...(userId && { userId }),
+        userId: user.id,
       });
-    },
-    {
-      onSuccess: (newLeave: Leave) => {
-        queryClient.setQueryData('leaves', (old: any) => {
-          return { ...old, items: [newLeave, ...old.items] };
-        });
-        onCloseCreate();
-        toast({ description: 'Successfully created', status: 'success' });
-      },
-      onError: (error: Error) => {
+      calendarRef.current?.getApi().addEvent(
+        {
+          id: newLeave.id,
+          title: `${
+            currentUser?.id === newLeave.user.id
+              ? 'Me'
+              : `${newLeave.user.firstName} ${newLeave.user.lastName}`
+          } (${generateDayPart(newLeave)})`,
+          start: newLeave.startAt,
+          end: newLeave.endAt,
+          reason: newLeave.reason,
+          user: newLeave.user,
+        },
+        'leaveEventsSource',
+      );
+      toast({ description: 'Successfully created', status: 'success' });
+      onCloseCreate();
+      setIsLoading(false);
+    } catch (error) {
+      if (error instanceof Error) {
         toast({ description: error.message, status: 'error' });
-      },
-    },
-  );
+        setIsLoading(false);
+      }
+    }
+  };
 
-  const updateLeaveMutation = useMutation(
-    (newLeave: NewLeaveInputs) => {
-      const { id, startAt, endAt, reason, userId } = newLeave;
-      return editLeaveApi(id, {
+  const updateLeave = async (newLeave: Leave) => {
+    if (!selectedLeaveEvent) return;
+    setIsLoading(true);
+    try {
+      const { id, startAt, endAt, reason, user } = newLeave;
+      const leave = await editLeaveApi(id, {
         startAt,
         endAt,
         reason,
-        ...(userId && { userId }),
+        userId: user.id,
       });
-    },
-    {
-      onSuccess: (newLeave: Leave) => {
-        queryClient.setQueryData('leaves', (old: any) => {
-          const newLeaves = old.items.map((leave: Leave) => {
-            if (leave.id === newLeave.id) return newLeave;
-            return leave;
-          });
-          return { ...old, items: newLeaves };
-        });
-        handleLeaveUnselect();
-        toast({ description: 'Successfully updated', status: 'success' });
-      },
-      onError: (error: Error) => {
+      selectedLeaveEvent.setProp(
+        'title',
+        `${
+          currentUser?.id === leave.user.id
+            ? 'Me'
+            : `${leave.user.firstName} ${leave.user.lastName}`
+        } (${generateDayPart(leave)})`,
+      );
+      selectedLeaveEvent.setDates(startAt, endAt);
+      selectedLeaveEvent.setExtendedProp('user', user);
+      selectedLeaveEvent.setExtendedProp('reason', reason);
+      toast({ description: 'Successfully updated', status: 'success' });
+      handleLeaveUnselect();
+      setIsLoading(false);
+    } catch (error) {
+      if (error instanceof Error) {
         toast({ description: error.message, status: 'error' });
-      },
-    },
-  );
+        setIsLoading(false);
+      }
+    }
+  };
 
-  const deleteLeaveMutation = useMutation(
-    (leaveId: string) => deleteLeaveApi(leaveId),
-    {
-      onSuccess: (_, leaveId) => {
-        queryClient.setQueryData('leaves', (old: any) => {
-          const newLeaves = old.items.filter(
-            (leave: Leave) => leave.id !== leaveId,
-          );
-          return { ...old, items: newLeaves };
-        });
-        handleLeaveUnselect();
-        toast({ description: 'Successfully deleted', status: 'success' });
-      },
-      onError: (error: Error) => {
+  const deleteLeave = async () => {
+    if (!selectedLeaveEvent) return;
+    const leaveId = selectedLeaveEvent.id;
+    setIsLoading(true);
+    try {
+      await deleteLeaveApi(leaveId);
+      selectedLeaveEvent.remove();
+      toast({ description: 'Successfully deleted', status: 'success' });
+      handleLeaveUnselect();
+      setIsLoading(false);
+    } catch (error) {
+      if (error instanceof Error) {
         toast({ description: error.message, status: 'error' });
-      },
-    },
-  );
-
-  const getLeavesById = (leaveId: string): Leave => {
-    const leaveData: LeaveResponse | undefined =
-      queryClient.getQueryData('leaves');
-    if (!leaveData) throw Error('no leaves found');
-    const leave = leaveData.items.find((leave: Leave) => leave.id === leaveId);
-    if (!leave) throw Error(`can not find leave ${leaveId}`);
-    return leave;
+        setIsLoading(false);
+      }
+    }
   };
 
   const handleLeaveUnselect = () => {
-    setSelectedLeave(null);
+    setSelectedLeaveEvent(null);
     onCloseEdit();
   };
 
-  const handleLeaveSelect = (event: EventApi) => {
-    const { type } = event._def.extendedProps;
-    if (type !== 'leaves') return;
-    const leave = getLeavesById(event._def.publicId);
-    setSelectedLeave(leave);
+  const handleLeaveSelect = (clickEvent: EventClickArg) => {
+    console.log('clickEvent.event', clickEvent.event);
+    if (clickEvent.event.source?.id !== 'leaveEventsSource') return;
+    setSelectedLeaveEvent(clickEvent.event);
     onOpenEdit();
   };
 
@@ -167,37 +179,53 @@ export default function Dashboard() {
         end: new Date(thisYearDateOfBirth),
         title:
           currentUser?.id === dateOfBirth.id
-            ? 'Your birthday'
+            ? 'My birthday'
             : `${dateOfBirth.firstName} ${dateOfBirth.lastName} 's birthday`,
-        type: 'birthdays',
       };
     });
-
-  const leaveEvents: EventInput[] = (getLeavesQuery.data?.items || []).map(
-    (leave: Leave) => {
-      return {
-        id: leave.id,
-        start: new Date(leave.startAt),
-        end: new Date(leave.endAt),
-        title: `${
-          currentUser?.id === leave.user.id
-            ? 'You'
-            : `${leave.user.firstName} ${leave.user.lastName}`
-        } (${generateDayPart(leave)})`,
-        user: leave.user,
-        type: 'leaves',
-      };
-    },
-  );
 
   const holidayEvents =
     getHolidaysQuery.data?.map((item: any) => ({
       title: item.summary,
       start: new Date(item.start.date),
       end: new Date(item.start.date),
-      resource: { type: 'holiday' },
     })) || [];
 
+  const getLeaveEvents: EventSourceFunc = useCallback(
+    (info, successCallback, failureCallback) => {
+      getLeavesApi({ from: info.startStr, to: info.endStr })
+        .then((leaveResponse) => {
+          successCallback(
+            leaveResponse.items.map((leave) => ({
+              id: leave.id,
+              title: `${
+                currentUser?.id === leave.user.id
+                  ? 'Me'
+                  : `${leave.user.firstName} ${leave.user.lastName}`
+              } (${generateDayPart(leave)})`,
+              start: leave.startAt,
+              end: leave.endAt,
+              reason: leave.reason,
+              user: leave.user,
+            })),
+          );
+        })
+        .catch((error) => {
+          failureCallback(error);
+        });
+    },
+    [currentUser],
+  );
+
+  const leaveEventsSource = useMemo(
+    () => ({
+      id: 'leaveEventsSource',
+      events: getLeaveEvents,
+    }),
+    [getLeaveEvents],
+  );
+
+  if (!users || !currentUser) return null;
   return (
     <Box height="100%">
       <Center>
@@ -207,22 +235,23 @@ export default function Dashboard() {
       </Center>
       <Box height="100%">
         <FullCalendar
+          ref={calendarRef}
           height="100%"
           eventClassNames="event"
-          eventClick={(eventInfo) => handleLeaveSelect(eventInfo.event)}
+          eventClick={handleLeaveSelect}
           plugins={[dayGridPlugin]}
           initialView="dayGridMonth"
           eventSources={[
-            { events: leaveEvents, defaultAllDay: true },
+            leaveEventsSource,
             {
               events: dateOfBirthEvents,
-              backgroundColor: 'red',
               defaultAllDay: true,
+              color: 'red',
             },
             {
               events: holidayEvents,
-              backgroundColor: 'green',
               defaultAllDay: true,
+              color: 'green',
             },
           ]}
         />
@@ -230,19 +259,28 @@ export default function Dashboard() {
       <Modal isOpen={isOpenCreate} onClose={onCloseCreate}>
         <NewLeave
           onClose={onCloseCreate}
-          isLoading={createLeaveMutation.isLoading}
-          onSubmit={(newLeave) => createLeaveMutation.mutate(newLeave)}
+          isLoading={isLoading}
+          onSubmit={createLeave}
+          users={users}
+          currentUser={currentUser}
         />
       </Modal>
-      {selectedLeave && (
+      {selectedLeaveEvent && (
         <Modal isOpen={isOpenEdit} onClose={onCloseEdit}>
           <NewLeave
-            leave={selectedLeave}
+            leave={{
+              id: selectedLeaveEvent.id,
+              startAt: selectedLeaveEvent.startStr,
+              endAt: selectedLeaveEvent.endStr,
+              reason: selectedLeaveEvent.extendedProps.reason,
+              user: selectedLeaveEvent.extendedProps.user,
+            }}
             onClose={handleLeaveUnselect}
-            onDelete={() => deleteLeaveMutation.mutate(selectedLeave.id)}
-            isLoading={updateLeaveMutation.isLoading}
-            isDeleting={deleteLeaveMutation.isLoading}
-            onSubmit={(newLeave) => updateLeaveMutation.mutate(newLeave)}
+            onDelete={deleteLeave}
+            isLoading={isLoading}
+            onSubmit={updateLeave}
+            users={users}
+            currentUser={currentUser}
           />
         </Modal>
       )}

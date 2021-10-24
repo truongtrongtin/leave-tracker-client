@@ -22,17 +22,17 @@ import { Role, User } from 'api/users';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Controller, useForm } from 'react-hook-form';
-import { useQueryClient } from 'react-query';
 import { AnyObjectSchema, date, object, string } from 'yup';
 import './date-picker.css';
 
 type NewLeaveProps = {
   leave?: Leave;
   isLoading: boolean;
-  isDeleting?: boolean;
   onClose: () => void;
-  onSubmit: (newLeave: NewLeaveInputs) => void;
+  onSubmit: (newLeave: Leave) => void;
   onDelete?: () => void;
+  users: User[];
+  currentUser: User;
 };
 
 export enum DayPart {
@@ -40,14 +40,6 @@ export enum DayPart {
   MORNING = 'MORNING',
   AFTERNOON = 'AFTERNOON',
 }
-
-export type NewLeaveInputs = {
-  id: string;
-  startAt: string;
-  endAt: string;
-  reason: string;
-  userId?: string;
-};
 
 export type FormFields = {
   userId: string;
@@ -88,15 +80,12 @@ const getInitialDayPart = (leave: Leave) => {
 function NewLeave({
   leave,
   isLoading,
-  isDeleting,
   onClose,
   onSubmit,
   onDelete,
+  users,
+  currentUser,
 }: NewLeaveProps) {
-  const queryClient = useQueryClient();
-  const currentUser: User | undefined = queryClient.getQueryData('currentUser');
-  const users: User[] | undefined = queryClient.getQueryData('users');
-
   const {
     register,
     handleSubmit,
@@ -112,7 +101,7 @@ function NewLeave({
   });
 
   const isEditing = Boolean(leave);
-  const isAdmin = currentUser?.role === Role.ADMIN;
+  const isAdmin = currentUser.role === Role.ADMIN;
 
   const handleSubmitLogic = ({
     leaveDate,
@@ -120,6 +109,7 @@ function NewLeave({
     reason,
     userId,
   }: FormFields) => {
+    const selectedUser = users.find((user) => user.id === userId);
     const startAt = new Date(leaveDate);
     const endAt = new Date(leaveDate);
     if (dayPart === DayPart.MORNING) {
@@ -139,7 +129,7 @@ function NewLeave({
       startAt: startAt.toISOString(),
       endAt: endAt.toISOString(),
       reason,
-      userId,
+      user: selectedUser || currentUser,
     });
   };
 
@@ -155,15 +145,15 @@ function NewLeave({
         <ModalCloseButton />
         <ModalBody>
           {isAdmin && (
-            <FormControl isInvalid={Boolean(errors.userId)}>
+            <FormControl isRequired isInvalid={Boolean(errors.userId)}>
               <FormLabel htmlFor="userId">User</FormLabel>
-              <Select
-                id="userId"
-                {...register('userId')}
-                placeholder="Select option"
-              >
-                {(users || []).map((user) => (
-                  <option key={user.id} value={user.id}>
+              <Select id="userId" {...register('userId')}>
+                {users.map((user) => (
+                  <option
+                    key={user.id}
+                    value={user.id}
+                    selected={!isEditing && currentUser.id === user.id}
+                  >
                     {user.firstName} {user.lastName}
                   </option>
                 ))}
@@ -183,7 +173,6 @@ function NewLeave({
                   onChange={onChange}
                   dateFormat="E MMM d, yyyy"
                   placeholderText="Select a weekday"
-                  autoFocus={!Boolean(leave)}
                   filterDate={(date) =>
                     date.getDay() !== 0 &&
                     date.getDay() !== 6 &&
@@ -218,8 +207,12 @@ function NewLeave({
             />
           </FormControl>
           <FormControl isInvalid={Boolean(errors.reason)} mt={4}>
-            <FormLabel htmlFor="reason">Reason (optional)</FormLabel>
-            <Input id="reason" {...register('reason')} />
+            <FormLabel htmlFor="reason">Reason</FormLabel>
+            <Input
+              id="reason"
+              {...register('reason')}
+              placeholder="Write something"
+            />
             <FormErrorMessage>{errors.reason?.message}</FormErrorMessage>
           </FormControl>
         </ModalBody>
@@ -229,13 +222,18 @@ function NewLeave({
               colorScheme="red"
               mr={3}
               onClick={onDelete}
-              isLoading={isDeleting}
+              isLoading={isLoading}
             >
               Delete
             </Button>
           )}
           <Spacer />
-          <Button variant="outline" mr={3} onClick={onClose}>
+          <Button
+            variant="outline"
+            mr={3}
+            onClick={onClose}
+            isLoading={isLoading}
+          >
             Close
           </Button>
           {

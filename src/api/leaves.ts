@@ -6,7 +6,6 @@ export interface Leave {
   startAt: string;
   endAt: string;
   reason: string;
-  status: string;
   user: User;
 }
 
@@ -16,8 +15,8 @@ export interface LeaveResponse {
   links: object;
 }
 
-export async function getAllLeavesApi(): Promise<LeaveResponse> {
-  return await api.get('leaves').json();
+export async function getLeavesApi(searchParams: any): Promise<LeaveResponse> {
+  return await api.get('leaves', { searchParams }).json();
 }
 
 export async function getMyLeavesApi(): Promise<any> {
@@ -40,7 +39,7 @@ export async function addLeaveApi(body: {
   startAt: string;
   endAt: string;
   reason: string;
-  userId?: string;
+  userId: string;
 }): Promise<any> {
   return await api
     .post('leaves/add', { body: new URLSearchParams(body) })
@@ -53,7 +52,7 @@ export async function editLeaveApi(
     startAt: string;
     endAt: string;
     reason: string;
-    userId?: string;
+    userId: string;
   },
 ): Promise<any> {
   return await api
