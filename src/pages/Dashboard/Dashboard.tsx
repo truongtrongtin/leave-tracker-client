@@ -30,6 +30,7 @@ import './fullCalendar.css';
 export default function Dashboard() {
   const toast = useToast();
   const queryClient = useQueryClient();
+  const timer = useRef<NodeJS.Timer | null>();
   const calendarRef = useRef<FullCalendar>(null);
   const currentUser: User | undefined = queryClient.getQueryData('currentUser');
   const users: User[] | undefined = queryClient.getQueryData('users');
@@ -67,11 +68,12 @@ export default function Dashboard() {
         reason,
         userId: user.id,
       });
+      const isCurrentUser = currentUser?.id === newLeave.user.id;
       calendarRef.current?.getApi().addEvent(
         {
           id: newLeave.id,
           title: `${
-            currentUser?.id === newLeave.user.id
+            isCurrentUser
               ? 'Me'
               : `${newLeave.user.firstName} ${newLeave.user.lastName}`
           } (${generateDayPart(newLeave)})`,
@@ -79,6 +81,7 @@ export default function Dashboard() {
           end: newLeave.endAt,
           reason: newLeave.reason,
           user: newLeave.user,
+          ...(isCurrentUser && { color: 'orange' }),
         },
         'leaveEventsSource',
       );
@@ -193,26 +196,36 @@ export default function Dashboard() {
 
   const getLeaveEvents: EventSourceFunc = useCallback(
     (info, successCallback, failureCallback) => {
-      getLeavesApi({ from: info.startStr, to: info.endStr })
-        .then((leaveResponse) => {
-          successCallback(
-            leaveResponse.items.map((leave) => ({
-              id: leave.id,
-              title: `${
-                currentUser?.id === leave.user.id
-                  ? 'Me'
-                  : `${leave.user.firstName} ${leave.user.lastName}`
-              } (${generateDayPart(leave)})`,
-              start: leave.startAt,
-              end: leave.endAt,
-              reason: leave.reason,
-              user: leave.user,
-            })),
-          );
-        })
-        .catch((error) => {
-          failureCallback(error);
-        });
+      if (timer.current) {
+        clearTimeout(timer.current);
+        timer.current = null;
+      }
+      timer.current = setTimeout(() => {
+        getLeavesApi({ from: info.startStr, to: info.endStr })
+          .then((leaveResponse) => {
+            successCallback(
+              leaveResponse.items.map((leave) => {
+                const isCurrentUser = currentUser?.id === leave.user.id;
+                return {
+                  id: leave.id,
+                  title: `${
+                    isCurrentUser
+                      ? 'Me'
+                      : `${leave.user.firstName} ${leave.user.lastName}`
+                  } (${generateDayPart(leave)})`,
+                  start: leave.startAt,
+                  end: leave.endAt,
+                  reason: leave.reason,
+                  user: leave.user,
+                  ...(isCurrentUser && { color: 'orange' }),
+                };
+              }),
+            );
+          })
+          .catch((error) => {
+            failureCallback(error);
+          });
+      }, 300);
     },
     [currentUser],
   );
@@ -233,7 +246,7 @@ export default function Dashboard() {
           Add Leave
         </Button>
       </Center>
-      <Box height="100%">
+      <Box height="calc(100% - 40px)">
         <FullCalendar
           ref={calendarRef}
           height="100%"
@@ -251,7 +264,7 @@ export default function Dashboard() {
             {
               events: holidayEvents,
               defaultAllDay: true,
-              color: 'green',
+              color: '#3788d8',
             },
           ]}
         />
