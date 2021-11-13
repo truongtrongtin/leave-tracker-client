@@ -4,7 +4,6 @@ import {
   AlertIcon,
   Box,
   Button,
-  CircularProgress,
   Flex,
   FormControl,
   FormErrorMessage,
@@ -86,18 +85,20 @@ export default function Login() {
               <PasswordInput id="password" {...register('password')} />
               <FormErrorMessage>{errors.password?.message}</FormErrorMessage>
             </FormControl>
+            <Flex justifyContent="flex-end" marginTop={2}>
+              <AppLink color="teal" href="/forgot">
+                Forgot password?
+              </AppLink>
+            </Flex>
             <Button
               width="full"
               colorScheme="teal"
               variant="outline"
               type="submit"
-              mt={8}
+              mt={5}
+              isLoading={isLoading}
             >
-              {isLoading ? (
-                <CircularProgress isIndeterminate size="24px" />
-              ) : (
-                'Sign in'
-              )}
+              Sign in
             </Button>
             <Button
               as="a"

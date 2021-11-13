@@ -21,6 +21,25 @@ export async function loginApi(email: string, password: string) {
     .json();
 }
 
+export async function requestPasswordResetApi(
+  email: string,
+  resetPath: string,
+) {
+  return await api
+    .post('auth/requestPasswordReset', {
+      body: new URLSearchParams({ email, resetPath }),
+    })
+    .json();
+}
+
+export async function resetPasswordApi(email: string, password: string) {
+  return await api
+    .post('auth/resetPassword', {
+      body: new URLSearchParams({ email, password }),
+    })
+    .json();
+}
+
 export async function logoutApi() {
   return await api.post('auth/logout');
 }

@@ -15,6 +15,8 @@ import { useEffect } from 'react';
 // import Test from 'pages/Grid';
 import { useQuery } from 'react-query';
 import { Redirect, Route, Switch } from 'wouter';
+import PasswordForgot from 'pages/PasswordForgot';
+import PasswordReset from 'pages/PasswordReset';
 
 function App() {
   const { isLoading } = useQuery('currentUser', () => getMeApi());
@@ -62,6 +64,12 @@ function App() {
       <LoggedOutRoute path="/signup">
         <Signup />
       </LoggedOutRoute>
+      <Route path="/forgot">
+        <PasswordForgot />
+      </Route>
+      <Route path="/password-reset">
+        <PasswordReset />
+      </Route>
       <Route path="/">
         <Redirect to="/dashboard" />
       </Route>
