@@ -1,20 +1,21 @@
-import { Box, Spinner } from '@chakra-ui/react';
+import { Spinner } from '@chakra-ui/react';
 import { getMeApi } from 'api/users';
-import AdminDashboardRoute from 'components/AdminDashboardRoute';
-import DashboardRoute from 'components/DashboardRoute';
-import LoggedOutRoute from 'components/LoggedOutRoute';
+import DashboardLayout from 'layouts/DashboardLayout';
 import Dashboard from 'pages/Dashboard';
 import Employee from 'pages/Employee';
+import Test from 'pages/Grid';
 import Leaves from 'pages/Leaves';
 import Login from 'pages/Login';
 import PasswordForgot from 'pages/PasswordForgot';
 import PasswordReset from 'pages/PasswordReset';
 import Profile from 'pages/Profile';
 import Signup from 'pages/Signup';
-import Holiday from 'pages/Statistics';
+import Statistics from 'pages/Statistics';
 import { useEffect } from 'react';
-// import Test from 'pages/Grid';
 import { useQuery } from 'react-query';
+import AdminRoute from 'routes/AdminRoute';
+import LoggedInRoute from 'routes/LoggedInRoute';
+import LoggedOutRoute from 'routes/LoggedOutRoute';
 import { Redirect, Route, Switch } from 'wouter';
 
 function App() {
@@ -23,11 +24,7 @@ function App() {
   useEffect(() => {
     const websocket = new WebSocket(process.env.REACT_APP_SOCKET_URL!);
     websocket.onopen = () => {
-      console.log('connected');
-    };
-
-    return () => {
-      websocket.close();
+      console.log('websocket connected');
     };
   }, []);
 
@@ -92,6 +89,9 @@ function App() {
 
   return (
     <Switch>
+      <Route path="/">
+        <Redirect to="/dashboard" />
+      </Route>
       <LoggedOutRoute path="/login">
         <Login />
       </LoggedOutRoute>
@@ -104,52 +104,34 @@ function App() {
       <Route path="/password-reset">
         <PasswordReset />
       </Route>
-      <Route path="/">
-        <Redirect to="/dashboard" />
-      </Route>
-      <DashboardRoute path="/profile">
-        <Profile />
-      </DashboardRoute>
-      <DashboardRoute path="/dashboard">
-        <Dashboard />
-      </DashboardRoute>
-      <DashboardRoute path="/leaves">
-        <Leaves />
-      </DashboardRoute>
-      <DashboardRoute path="/employees">
-        <Employee />
-      </DashboardRoute>
-      <AdminDashboardRoute path="/statistics">
-        <Holiday />
-      </AdminDashboardRoute>
-      <AdminDashboardRoute path="/test">
-        {/* <Test /> */}
-        <Box
-          display="grid"
-          gridTemplateRows="50px 100px"
-          gridTemplateColumns="1fr 1fr 2fr"
-          gridGap="1px"
-        >
-          <Box backgroundColor="red" textAlign="center">
-            1
-          </Box>
-          <Box backgroundColor="red" textAlign="center">
-            2
-          </Box>
-          <Box backgroundColor="red" textAlign="center">
-            3
-          </Box>
-          <Box backgroundColor="red" textAlign="center">
-            4
-          </Box>
-          <Box backgroundColor="red" textAlign="center">
-            5
-          </Box>
-          <Box backgroundColor="red" textAlign="center">
-            6
-          </Box>
-        </Box>
-      </AdminDashboardRoute>
+      <LoggedInRoute path="/profile">
+        <DashboardLayout>
+          <Profile />
+        </DashboardLayout>
+      </LoggedInRoute>
+      <LoggedInRoute path="/dashboard">
+        <DashboardLayout>
+          <Dashboard />
+        </DashboardLayout>
+      </LoggedInRoute>
+      <LoggedInRoute path="/leaves">
+        <DashboardLayout>
+          <Leaves />
+        </DashboardLayout>
+      </LoggedInRoute>
+      <LoggedInRoute path="/employees">
+        <DashboardLayout>
+          <Employee />
+        </DashboardLayout>
+      </LoggedInRoute>
+      <AdminRoute path="/statistics">
+        <DashboardLayout>
+          <Statistics />
+        </DashboardLayout>
+      </AdminRoute>
+      <AdminRoute path="/test">
+        <Test />
+      </AdminRoute>
       <Route>Not Found!</Route>
     </Switch>
   );

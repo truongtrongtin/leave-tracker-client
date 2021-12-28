@@ -18,7 +18,11 @@ const queryClient = new QueryClient({
   },
 });
 
-ReactDOM.render(
+const container = document.getElementById('root');
+// @ts-ignore:next-line
+const root = ReactDOM.createRoot(container);
+
+root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <AppContextProvider>
@@ -28,7 +32,6 @@ ReactDOM.render(
       </AppContextProvider>
     </QueryClientProvider>
   </React.StrictMode>,
-  document.getElementById('root'),
 );
 
 // If you want to start measuring performance in your app, pass a function
