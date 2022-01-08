@@ -1,5 +1,4 @@
 import { Role, User } from 'api/users';
-import React from 'react';
 import { useQueryClient } from 'react-query';
 import { Redirect, Route } from 'wouter';
 

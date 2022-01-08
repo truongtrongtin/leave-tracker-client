@@ -1,5 +1,5 @@
 import { AppContext } from 'contexts/AppContext';
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { useQueryClient } from 'react-query';
 import { Redirect, Route } from 'wouter';
 

@@ -1,4 +1,4 @@
-import { createContext, useState } from 'react';
+import { createContext, ReactChild, useState } from 'react';
 
 type AppContextValues = {
   intendedRoute: string;
@@ -10,7 +10,11 @@ export const AppContext = createContext<AppContextValues>({
   setIntendedRoute: () => {},
 });
 
-export default function AppContextProvider({ children }: any) {
+export default function AppContextProvider({
+  children,
+}: {
+  children: ReactChild;
+}) {
   const [intendedRoute, setIntendedRoute] = useState('');
 
   return (

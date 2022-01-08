@@ -45,7 +45,7 @@ export default function Signup() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<SignupInputs>({
     resolver: yupResolver(signupSchema),
   });
 

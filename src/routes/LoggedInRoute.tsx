@@ -1,5 +1,5 @@
 import { AppContext } from 'contexts/AppContext';
-import React, { useContext, useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import { useQueryClient } from 'react-query';
 import { Redirect, Route, useLocation } from 'wouter';
 
