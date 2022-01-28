@@ -1,11 +1,4 @@
-import {
-  Box,
-  Button,
-  Center,
-  Modal,
-  useDisclosure,
-  useToast,
-} from '@chakra-ui/react';
+import { Box, Button, Center, useDisclosure, useToast } from '@chakra-ui/react';
 import FullCalendar, {
   EventApi,
   EventClickArg,
@@ -21,7 +14,7 @@ import {
 } from 'api/leaves';
 import { getAllHolidaysApi } from 'api/others';
 import { getAllUsersApi, getAllUsersBirthdayApi, User } from 'api/users';
-import NewLeave from 'pages/Leaves/NewLeave';
+import NewLeaveModal from 'pages/Leaves/NewLeaveModal';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import { DateOfBirth } from 'types/dateOfBirth';
@@ -153,7 +146,6 @@ export default function Dashboard() {
   };
 
   const handleLeaveSelect = (clickEvent: EventClickArg) => {
-    console.log('clickEvent.event', clickEvent.event);
     if (clickEvent.event.source?.id !== 'leaveEventsSource') return;
     setSelectedLeaveEvent(clickEvent.event);
     onOpenEdit();
@@ -269,34 +261,35 @@ export default function Dashboard() {
           ]}
         />
       </Box>
-      <Modal isOpen={isOpenCreate} onClose={onCloseCreate}>
-        <NewLeave
-          onClose={onCloseCreate}
-          isLoading={isLoading}
-          onSubmit={createLeave}
-          users={users}
-          currentUser={currentUser}
-        />
-      </Modal>
-      {selectedLeaveEvent && (
-        <Modal isOpen={isOpenEdit} onClose={onCloseEdit}>
-          <NewLeave
-            leave={{
-              id: selectedLeaveEvent.id,
-              startAt: selectedLeaveEvent.startStr,
-              endAt: selectedLeaveEvent.endStr,
-              reason: selectedLeaveEvent.extendedProps.reason,
-              user: selectedLeaveEvent.extendedProps.user,
-            }}
-            onClose={handleLeaveUnselect}
-            onDelete={deleteLeave}
-            isLoading={isLoading}
-            onSubmit={updateLeave}
-            users={users}
-            currentUser={currentUser}
-          />
-        </Modal>
-      )}
+      <NewLeaveModal
+        isOpen={isOpenCreate}
+        onClose={onCloseCreate}
+        isLoading={isLoading}
+        onSubmit={createLeave}
+        users={users}
+        currentUser={currentUser}
+      />
+      <NewLeaveModal
+        isOpen={isOpenEdit}
+        leave={
+          selectedLeaveEvent
+            ? {
+                id: selectedLeaveEvent.id,
+                startAt: selectedLeaveEvent.startStr,
+                endAt: selectedLeaveEvent.endStr,
+                reason: selectedLeaveEvent.extendedProps.reason,
+                user: selectedLeaveEvent.extendedProps.user,
+              }
+            : undefined
+        }
+        onClose={handleLeaveUnselect}
+        onDelete={deleteLeave}
+        isLoading={isLoading}
+        onSubmit={updateLeave}
+        users={users}
+        currentUser={currentUser}
+      />
+      )
     </Box>
   );
 }
