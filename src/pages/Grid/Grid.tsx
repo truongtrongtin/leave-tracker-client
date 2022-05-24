@@ -1,6 +1,5 @@
 // @ts-nocheck
 import { useEffect, useState } from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
 import { VariableSizeGrid } from 'react-window';
 import './test.css';
 import useKeyPress from './useKeyPress';
@@ -234,37 +233,33 @@ export default function Grid() {
   }, [columnStartIndex, gridData, rowStartIndex]);
 
   return (
-    <AutoSizer>
-      {({ height, width }) => (
-        <VariableSizeGrid
-          columnCount={1000}
-          columnWidth={(index) => (index % 2 ? 100 : 80)}
-          height={height}
-          rowCount={1000000}
-          rowHeight={(index) => (index % 2 ? 40 : 30)}
-          width={width}
-          itemData={{
-            selection,
-            setSelection,
-            isDragging,
-            setIsDragging,
-            gridData,
-            setGridData,
-            editingCell,
-            setEdittingCell,
-            onMouseDown: handleMouseDown,
-            onMouseOver: handleMouseOver,
-            onMouseUp: handleMouseUp,
-            onBlur: handleUpdateGridData,
-            onDoubleClick: handleDoubleClick,
-            onChangeEditingCell: handleChangeEditingCell,
-            onKeyUp: handleKeyDownInput,
-          }}
-        >
-          {Cell}
-        </VariableSizeGrid>
-      )}
-    </AutoSizer>
+    <VariableSizeGrid
+      columnCount={1000}
+      columnWidth={(index) => (index % 2 ? 100 : 80)}
+      height={1000}
+      rowCount={1000000}
+      rowHeight={(index) => (index % 2 ? 40 : 30)}
+      width={1000}
+      itemData={{
+        selection,
+        setSelection,
+        isDragging,
+        setIsDragging,
+        gridData,
+        setGridData,
+        editingCell,
+        setEdittingCell,
+        onMouseDown: handleMouseDown,
+        onMouseOver: handleMouseOver,
+        onMouseUp: handleMouseUp,
+        onBlur: handleUpdateGridData,
+        onDoubleClick: handleDoubleClick,
+        onChangeEditingCell: handleChangeEditingCell,
+        onKeyUp: handleKeyDownInput,
+      }}
+    >
+      {Cell}
+    </VariableSizeGrid>
   );
 }
 
