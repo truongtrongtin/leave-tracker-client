@@ -14,13 +14,13 @@ import { requestPasswordResetApi } from 'api/auth';
 import AppLink from 'components/AppLink';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { object, SchemaOf, string } from 'yup';
+import { object, Schema, string } from 'yup';
 
 type PasswordForgotInputs = {
   email: string;
 };
 
-const passwordForgotSchema: SchemaOf<PasswordForgotInputs> = object().shape({
+const passwordForgotSchema: Schema<PasswordForgotInputs> = object().shape({
   email: string().required().email(),
 });
 

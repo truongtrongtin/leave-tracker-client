@@ -14,7 +14,7 @@ import { updateCurrentUserPasswordApi, User } from 'api/users';
 import PasswordInput from 'components/PasswordInput';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
-import { AnyObjectSchema, object, string } from 'yup';
+import { object, string } from 'yup';
 
 type PasswordFormProps = {
   isEditing: boolean;
@@ -23,7 +23,7 @@ type PasswordFormProps = {
   onCancelClick: () => void;
 };
 
-const updatePasswordSchema: AnyObjectSchema = object().shape({
+const updatePasswordSchema = object().shape({
   currentPassword: string().required(),
   newPassword: string().required(),
 });

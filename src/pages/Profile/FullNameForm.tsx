@@ -14,7 +14,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { editCurrentUserApi, User } from 'api/users';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
-import { AnyObjectSchema, object, string } from 'yup';
+import { object, string } from 'yup';
 
 type FullNameFormProps = {
   isEditing: boolean;
@@ -25,7 +25,7 @@ type FullNameFormProps = {
   lastName: string;
 };
 
-const usernameSchema: AnyObjectSchema = object().shape({
+const usernameSchema = object().shape({
   firstName: string().required(),
   lastName: string().required(),
 });

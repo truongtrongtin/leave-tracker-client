@@ -22,14 +22,14 @@ import { useContext, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaFacebook, FaGithub, FaGoogle } from 'react-icons/fa';
 import { useQueryClient } from 'react-query';
-import { object, SchemaOf, string } from 'yup';
+import { object, Schema, string } from 'yup';
 
 type LoginInputs = {
   email: string;
   password: string;
 };
 
-const loginSchema: SchemaOf<LoginInputs> = object().shape({
+const loginSchema: Schema<LoginInputs> = object().shape({
   email: string().required().email(),
   password: string().required(),
 });

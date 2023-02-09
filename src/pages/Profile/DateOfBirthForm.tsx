@@ -14,7 +14,7 @@ import { editCurrentUserApi, User } from 'api/users';
 import ReactDatePicker from 'react-datepicker';
 import { Controller, useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
-import { AnyObjectSchema, date, object } from 'yup';
+import { date, object } from 'yup';
 
 type DateOfBirthFormProps = {
   isEditing: boolean;
@@ -24,7 +24,7 @@ type DateOfBirthFormProps = {
   dateOfBirth?: Date;
 };
 
-const dateOfBirthSchema: AnyObjectSchema = object().shape({
+const dateOfBirthSchema = object().shape({
   dateOfBirth: date().required(),
 });
 

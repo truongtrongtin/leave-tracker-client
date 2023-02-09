@@ -23,7 +23,7 @@ import { Role, User } from 'api/users';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Controller, useForm } from 'react-hook-form';
-import { AnyObjectSchema, date, object, string } from 'yup';
+import { date, object, string } from 'yup';
 import './date-picker.css';
 
 type NewLeaveModalProps = {
@@ -50,7 +50,7 @@ export type FormFields = {
   reason: string;
 };
 
-const newLeaveSchema: AnyObjectSchema = object().shape({
+const newLeaveSchema = object().shape({
   userId: string().notRequired(),
   leaveDate: date().required(),
   dayPart: string().required(),

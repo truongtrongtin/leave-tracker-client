@@ -1,10 +1,7 @@
 import { Box, Button, Center, useDisclosure, useToast } from '@chakra-ui/react';
-import FullCalendar, {
-  EventApi,
-  EventClickArg,
-  EventSourceFunc,
-} from '@fullcalendar/react';
+import { EventApi, EventClickArg, EventSourceFunc } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import FullCalendar from '@fullcalendar/react';
 import {
   addLeaveApi,
   deleteLeaveApi,

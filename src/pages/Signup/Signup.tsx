@@ -21,7 +21,7 @@ import PasswordInput from 'components/PasswordInput';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation } from 'wouter';
-import { object, SchemaOf, string } from 'yup';
+import { object, Schema, string } from 'yup';
 
 type SignupInputs = {
   email: string;
@@ -30,7 +30,7 @@ type SignupInputs = {
   lastName: string;
 };
 
-const signupSchema: SchemaOf<SignupInputs> = object().shape({
+const signupSchema: Schema<SignupInputs> = object().shape({
   email: string().required().email(),
   password: string().required(),
   firstName: string().required(),

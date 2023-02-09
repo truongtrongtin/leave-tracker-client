@@ -17,13 +17,13 @@ import { useQueryParams } from 'hooks/useQueryParams';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation } from 'wouter';
-import { object, SchemaOf, string } from 'yup';
+import { object, Schema, string } from 'yup';
 
 type PasswordResetInputs = {
   newPassword: string;
 };
 
-const passwordResetSchema: SchemaOf<PasswordResetInputs> = object().shape({
+const passwordResetSchema: Schema<PasswordResetInputs> = object().shape({
   newPassword: string().required(),
 });
 
